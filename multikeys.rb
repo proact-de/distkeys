@@ -265,6 +265,8 @@ begin
 	
 	action = ARGV[0] || raise( "Need an action in order to do something." )
 	
+	raise ( "Invalid action." ) if not ( action == "add" or action == "remove" or action == "list" )
+	
 	raise ( "Need a keyfile." ) if keys == nil and not ( action == "list" )
 
 	hosts.each do | host |
@@ -309,6 +311,9 @@ begin
 			end
 			# Commit the changes
 			authkeys.commit
+		else
+			# Should not be reachable
+			raise( "Invalid action." )
 		end
 		
 		# Disconnect from the host
