@@ -307,7 +307,9 @@ begin
 		ssh_host.disconnect
 		
 		# Disconnect from the gateway
-		ssh_gateway.disconnect
+		if ssh_gateway
+			ssh_gateway.disconnect
+		end
 	end
 
 # {{{ error handling
