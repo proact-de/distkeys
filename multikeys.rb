@@ -265,7 +265,7 @@ begin
 	
 	action = ARGV[0] || raise( "Need an action in order to do something." )
 	
-	raise ( "Invalid action." ) if not ( action == "add" or action == "remove" or action == "list" )
+	raise ( "Unsupported action." ) if not ( action == "add" or action == "remove" or action == "list" )
 	
 	raise ( "Need a keyfile." ) if keys == nil and not ( action == "list" )
 
@@ -313,7 +313,7 @@ begin
 			authkeys.commit
 		else
 			# Should not be reachable
-			raise( "Invalid action." )
+			raise( "Unsupported action." )
 		end
 		
 		# Disconnect from the host
