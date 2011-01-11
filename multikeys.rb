@@ -7,8 +7,6 @@ require 'net/sftp'
 class SSHAuthKeys
 	# Authorized Keys
 	attr_reader :authkeys
-	
-	GetAuthKeyError = 1
 
 	# Takes an already initialized ssh object and
 	# tries to get existing authorized keys
@@ -50,7 +48,6 @@ class SSHAuthKeys
 	def list()
 		@authkeys.each do | line |
 			if line.index('ssh-')
-				# FIXME Crude hack to get the comment after the base64 encoded public key
 				puts line.match(/ssh-[^ ]+\s+[A-Za-z0-9=+\/]+ (.*$)/)[1]
 			end
 		end
