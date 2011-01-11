@@ -3,6 +3,7 @@
 require 'net/ssh/gateway'
 require 'net/sftp'
 
+require 'optparse'
 
 class SSHAuthKeys
 	# Authorized Keys
@@ -161,6 +162,8 @@ class SSHAuthKeys
 	end
 
 end
+
+exit 0
 
 #gateway = Net::SSH::Gateway.new('99.99.99.99', 'root')
 
