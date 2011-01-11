@@ -163,48 +163,117 @@ class SSHAuthKeys
 
 end
 
+class SSHHost
+	# Net::SSH instance of the SSH server if connected
+	attr_reader :ssh
+	
+	# Takes a hash with host, port, user as returned from connection_info
+	def initialize( hostdata )
+		@host = hostdata[:host]
+		@port = hostdata[:port]
+		@user = hostdata[:user]
+	end
+
+	# Connect and return an Net::SSH object
+	def connect()
+		puts "Connecting to #{@host}..."
+		@ssh = Net::SSH.start(@host, @user, :port => @port, :compression => false )
+		return @ssh
+	end
+
+	def disconnect()
+		@ssh.shutdown!
+		@ssh = nil
+	end
+end
+
+# {{{ This function returns a hash which contains user, host, port from a given string *url* which is formated[user@]host[:port]
+def connection_info(url)
+	url =~ /^(?:([a-z0-9-]+)@)?([a-z0-9-]+(?:\.[a-z0-9-]+)*)(?::(\d+))?$/i
+	user = $1
+	user = "root" if !$1
+	port = $3
+	port = "22" if !$3
+	host = $2
+	{ :user => user, :host => host, :port => port }
+end
+#}}}
+
+# Parse options
+hosts = nil
+keys = nil
+
+opts = OptionParser.new do | opt |
+	opt.banner = "Usage "+$0.to_s+" <optionen> <aktion>"
+
+	opt.on( "-H", "--host <host>", "Host to connect to (Syntax: [user@]host[:port])." ) do | value |
+		hosts = value.to_s
+	end
+
+	opt.on( "-K", "--key <key>", "Keyfile to add or remove from the server." ) do | value |
+		keys = value.to_s
+	end
+end
+
+# Parse arguments
+
+begin
+	opts.parse!( ARGV )
+	
+	action = ARGV[0] || raise( "Need an action in order to do something." )
+	
+	raise ( "Need a keyfile." ) if keys == nil and not ( action == "list" )
+
+	hosts.each do | host |
+		host_data = connection_info( host )
+
+		# Initialize a new SSH host...
+		ssh_host = SSHHost.new( host_data )
+
+		# And connect
+		ssh = ssh_host.connect
+		
+		case action
+		when "list"
+			authkeys = SSHAuthKeys.new( ssh )
+			authkeys.list
+		when "add"
+			authkeys = SSHAuthKeys.new( ssh )
+			keys.each do | key | 
+				authkeys.addkeyfile( key )
+			end
+			# Commit the changes
+			authkeys.commit
+		when "remove"
+			authkeys = SSHAuthKeys.new( ssh )
+			keys.each do | key | 
+				authkeys.removekeyfile( key )
+			end
+			# Commit the changes
+			authkeys.commit
+		end
+		
+		# Disconnect from the host
+		ssh_host.disconnect
+	end
+
+# {{{ error handling
+rescue => exc
+	# raise
+	STDERR.puts exc
+  STDERR.puts opts.to_s
+	puts "\nSupported actions:"
+	puts "add:    add key(s)."
+	puts "remove: remove key(s)."
+  exit 1
+# }}}
+end
+
 exit 0
 
 #gateway = Net::SSH::Gateway.new('99.99.99.99', 'root')
 
 #authkeys = SSHAuthKeys.new( gateway.ssh('111.111.111', 'root') )
-
-ssh = Net::SSH.start( '192.168.1.1', 'martin', :port => 22, :compression => false )
-
-authkeys = SSHAuthKeys.new( ssh )
-
-authkeys.list
-
-puts
-
-authkeys.addkeyfile( 'id_rsa-test.pub' )
-
-puts
-
-authkeys.list
-
-puts
-
-authkeys.commit
-
-puts
-
-authkeys.removekeyfile( 'id_rsa-test.pub' )
-
-puts
-authkeys.list
-
-puts
-authkeys.commit
-puts
-
-authkeys.removekeyfile( 'id_rsa-test.pub' )
-
-puts
-
-authkeys.commit
-
-ssh.shutdown!
 
 #gateway.shutdown!
 
