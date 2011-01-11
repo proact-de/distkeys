@@ -26,23 +26,15 @@ class SSHAuthKeys
 		# just fine for us
 		# Via the channel method we just get the standard
 		# output
-		ssh.open_channel do | ch |
-		  ch.exec("cat #{authkeyfile}") do | ch, success |
-				if success
-					ch.on_data do | ch, data |
-						@authkeys = data.to_a
-						# For debugging purposes
-						@authkeys_flat = data
-					end
-					# Doesn't give stderr at the moment
-					ch.on_extended_data do | ch, data |
-						puts "ERROR: #{data}"
-					end
-				end
-			end
-		end
-		# Wait for the above to complete
-		ssh.loop
+
+		# Start SFTP session
+		puts "Opening SFTP session..."
+		@sftp = Net::SFTP::Session.new(@ssh)
+		@sftp.loop { @sftp.opening? }
+		
+		@authkeys_flat = @sftp.download!( authkeyfile )
+		@authkeys = @authkeys_flat.to_a
+		@sftp.loop
 	end
 
 	# List keys via ssh-keygen -lf
@@ -129,23 +121,18 @@ class SSHAuthKeys
 		puts "Creating a backup to #{backupfile} if not already done today..."
 		@ssh.exec!( "test -f #{backupfile} || cp -p #{@authkeyfile} #{backupfile}" )
 
-		# Start SFTP session
-		puts "Opening SFTP session..."
-		sftp = Net::SFTP::Session.new(@ssh)
-		sftp.loop { sftp.opening? }
-
 		newauthkeyfile = "#{@authkeyfile}-new"
 		puts "Uploading keys to #{newauthkeyfile}..."
 		wantedsize = 0
-		sftp.file.open(newauthkeyfile , "w" ) do | file |
+		@sftp.file.open(newauthkeyfile , "w" ) do | file |
 			@authkeys.each do | line |
 				file.puts line
 				wantedsize += line.length
 			end
 		end
-		sftp.loop
+		@sftp.loop
 
-		request = sftp.lstat(newauthkeyfile) do | response |
+		request = @sftp.lstat(newauthkeyfile) do | response |
 			if response.ok?
 				# File size okay?
 				if response[:attrs].size >= wantedsize
@@ -158,7 +145,7 @@ class SSHAuthKeys
 				end
 			end
 		end
-		sftp.loop
+		@sftp.loop
 	end
 
 end
@@ -324,9 +311,8 @@ begin
 	end
 
 # {{{ error handling
-rescue => exc
+rescue OptionParser::ParseError => exc
 	# raise
-	STDERR.puts exc
   STDERR.puts opts.to_s
 	puts "\nSupported actions:"
 	puts "add:    add key(s)."
