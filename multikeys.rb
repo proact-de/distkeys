@@ -163,9 +163,15 @@ class SSHAuthKeys
 
 end
 
-class SSHHost
-	# Net::SSH instance of the SSH server if connected
-	attr_reader :ssh
+#gateway = Net::SSH::Gateway.new('99.99.99.99', 'root')
+
+#authkeys = SSHAuthKeys.new( gateway.ssh('111.111.111', 'root') )
+
+#gateway.shutdown!
+
+class SSHGateway
+	# Net::SSH::Gateway instance
+	attr_reader :gateway
 	
 	# Takes a hash with host, port, user as returned from connection_info
 	def initialize( hostdata )
@@ -174,10 +180,42 @@ class SSHHost
 		@user = hostdata[:user]
 	end
 
+	# Connect and return an Net::SSH::Gateway object
+	def connect()
+		puts "Connecting to gateway #{@host}..."
+		@gateway = Net::SSH::Gateway.new(@host, @user, :port => @port, :compression => false )
+
+		return @gateway
+	end
+
+	def disconnect()
+		@gateway.shutdown!
+		@gateway = nil
+	end
+end
+
+class SSHHost
+	# Net::SSH instance of the SSH server if connected
+	attr_reader :ssh
+	
+	# Takes a hash with host, port, user as returned from connection_info
+	def initialize( hostdata, gateway = nil )
+		@host = hostdata[:host]
+		@port = hostdata[:port]
+		@user = hostdata[:user]
+		
+		@gateway = gateway
+	end
+
 	# Connect and return an Net::SSH object
 	def connect()
-		puts "Connecting to #{@host}..."
-		@ssh = Net::SSH.start(@host, @user, :port => @port, :compression => false )
+		if @gateway
+			puts "Connecting to host #{@host} via gateway..."
+			@ssh = @gateway.ssh(@host, @user, :port => @port, :compression => false )
+		else
+			puts "Connecting to host #{@host}..."
+			@ssh = Net::SSH.start(@host, @user, :port => @port, :compression => false )
+		end
 		return @ssh
 	end
 
@@ -202,6 +240,7 @@ end
 # Parse options
 hosts = nil
 keys = nil
+gateway = nil
 
 opts = OptionParser.new do | opt |
 	opt.banner = "Usage "+$0.to_s+" <optionen> <aktion>"
@@ -212,6 +251,10 @@ opts = OptionParser.new do | opt |
 
 	opt.on( "-K", "--key <key>", "Keyfile to add or remove from the server." ) do | value |
 		keys = value.to_s
+	end
+
+	opt.on( "-G", "--gateway <gateway>", "Gateway to access the host via port forwarding." ) do | value |
+		gateway = value.to_s
 	end
 end
 
@@ -227,10 +270,25 @@ begin
 	hosts.each do | host |
 		host_data = connection_info( host )
 
+		# Gateway?
+		if gateway
+			gateway_data = connection_info( gateway )
+			
+			# Initialize a new gateway...
+			ssh_gateway = SSHGateway.new( gateway_data )
+			
+			# ... and connect to it
+			ssh_gateway_connected = ssh_gateway.connect
+		end
+		
 		# Initialize a new SSH host...
-		ssh_host = SSHHost.new( host_data )
+		if gateway
+			ssh_host = SSHHost.new( host_data, ssh_gateway_connected )
+		else
+			ssh_host = SSHHost.new( host_data )
+		end
 
-		# And connect
+		# ... and connect to it
 		ssh = ssh_host.connect
 		
 		case action
@@ -255,6 +313,9 @@ begin
 		
 		# Disconnect from the host
 		ssh_host.disconnect
+		
+		# Disconnect from the gateway
+		ssh_gateway.disconnect
 	end
 
 # {{{ error handling
@@ -270,10 +331,4 @@ rescue => exc
 end
 
 exit 0
-
-#gateway = Net::SSH::Gateway.new('99.99.99.99', 'root')
-
-#authkeys = SSHAuthKeys.new( gateway.ssh('111.111.111', 'root') )
-
-#gateway.shutdown!
 
