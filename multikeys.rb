@@ -225,23 +225,23 @@ end
 #}}}
 
 # Parse options
-hosts = nil
-keys = nil
-gateway = nil
+hosts = [ nil ]
+keys = [ nil ]
+gateways = [ nil ]
 
 opts = OptionParser.new do | opt |
 	opt.banner = "Usage "+$0.to_s+" <optionen> <aktion>"
 
 	opt.on( "-H", "--host <host>", "Host to connect to (Syntax: [user@]host[:port])." ) do | value |
-		hosts = value.to_s
+		hosts = [ value.to_s ]
 	end
 
 	opt.on( "-K", "--key <key>", "Keyfile to add or remove from the server." ) do | value |
-		keys = value.to_s
+		keys = [ value.to_s ]
 	end
 
 	opt.on( "-G", "--gateway <gateway>", "Gateway to access the host via port forwarding." ) do | value |
-		gateway = value.to_s
+		gateways = [ value.to_s ]
 	end
 end
 
@@ -256,9 +256,7 @@ begin
 	
 	raise ( "Need a keyfile." ) if keys == nil and not ( action == "list" )
 
-	hosts.each do | host |
-		host_data = connection_info( host )
-
+	gateways.each do | gateway |
 		# Gateway?
 		if gateway
 			gateway_data = connection_info( gateway )
@@ -269,48 +267,53 @@ begin
 			# ... and connect to it
 			ssh_gateway_connected = ssh_gateway.connect
 		end
-		
-		# Initialize a new SSH host...
-		if gateway
-			ssh_host = SSHHost.new( host_data, ssh_gateway_connected )
-		else
-			ssh_host = SSHHost.new( host_data )
-		end
 
-		# ... and connect to it
-		ssh = ssh_host.connect
-		
-		case action
-		when "list"
-			authkeys = SSHAuthKeys.new( ssh )
-			authkeys.list
-		when "add"
-			authkeys = SSHAuthKeys.new( ssh )
-			keys.each do | key | 
-				authkeys.addkeyfile( key )
+		hosts.each do | host |
+			host_data = connection_info( host )
+
+			# Initialize a new SSH host...
+			if gateway
+				ssh_host = SSHHost.new( host_data, ssh_gateway_connected )
+			else
+				ssh_host = SSHHost.new( host_data )
 			end
-			# Commit the changes
-			authkeys.commit
-		when "remove"
-			authkeys = SSHAuthKeys.new( ssh )
-			keys.each do | key | 
-				authkeys.removekeyfile( key )
+
+			# ... and connect to it
+			ssh = ssh_host.connect
+			
+			case action
+			when "list"
+				authkeys = SSHAuthKeys.new( ssh )
+				authkeys.list
+			when "add"
+				authkeys = SSHAuthKeys.new( ssh )
+				keys.each do | key | 
+					authkeys.addkeyfile( key )
+				end
+				# Commit the changes
+				authkeys.commit
+			when "remove"
+				authkeys = SSHAuthKeys.new( ssh )
+				keys.each do | key | 
+					authkeys.removekeyfile( key )
+				end
+				# Commit the changes
+				authkeys.commit
+			else
+				# Should not be reachable
+				raise( "Unsupported action." )
 			end
-			# Commit the changes
-			authkeys.commit
-		else
-			# Should not be reachable
-			raise( "Unsupported action." )
-		end
-		
-		# Disconnect from the host
-		ssh_host.disconnect
-		
+			
+			# Disconnect from the host
+			ssh_host.disconnect
+
+		end # hosts.each do
+
 		# Disconnect from the gateway
 		if ssh_gateway
 			ssh_gateway.disconnect
 		end
-	end
+	end # gateway.each do
 
 # {{{ error handling
 rescue OptionParser::ParseError => exc
