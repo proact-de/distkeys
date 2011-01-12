@@ -225,15 +225,15 @@ end
 #}}}
 
 # Parse options
-hosts = [ nil ]
-keys = [ nil ]
-gateways = [ nil ]
+host = nil
+keys = [ ]
+gateway = nil
 
 opts = OptionParser.new do | opt |
 	opt.banner = "Usage "+$0.to_s+" <optionen> <aktion>"
 
 	opt.on( "-H", "--host <host>", "Host to connect to (Syntax: [user@]host[:port])." ) do | value |
-		hosts = [ value.to_s ]
+		host = value.to_s
 	end
 
 	opt.on( "-K", "--key <key>", "Keyfile to add or remove from the server." ) do | value |
@@ -241,7 +241,7 @@ opts = OptionParser.new do | opt |
 	end
 
 	opt.on( "-G", "--gateway <gateway>", "Gateway to access the host via port forwarding." ) do | value |
-		gateways = [ value.to_s ]
+		gateway = value.to_s
 	end
 end
 
@@ -250,13 +250,24 @@ end
 begin
 	opts.parse!( ARGV )
 	
+	# Transform gateway and host in our data structure for the loop
+	if host
+		gwhosts = [ {
+			'gateway' => gateway,
+			'hosts' => [ host ]
+		} ]
+	end
+
 	action = ARGV[0] || raise( "Need an action in order to do something." )
 	
 	raise ( "Unsupported action." ) if not ( action == "add" or action == "remove" or action == "list" )
 	
 	raise ( "Need a keyfile." ) if keys == nil and not ( action == "list" )
 
-	gateways.each do | gateway |
+	gwhosts.each do | gwhost |
+		gateway = gwhost['gateway']
+		hosts = gwhost['hosts']
+		
 		# Gateway?
 		if gateway
 			gateway_data = connection_info( gateway )
