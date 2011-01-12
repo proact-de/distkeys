@@ -330,7 +330,7 @@ begin
 
 	action = ARGV[0] || raise( "Need an action in order to do something." )
 	
-	raise ( "Unsupported action." ) if not ( action == "add" or action == "remove" or action == "addremove" or action == "list" )
+	raise ( "Unsupported action." ) if not ( action == "add" or action == "remove" or action == "addremove" or action == "list" or action == "ssh" )
 	
 	raise ( "Need a keyfile." ) if keys == nil and not ( action == "list" )
 
@@ -352,15 +352,20 @@ begin
 		hosts.each do | host |
 			host_data = connection_info( host )
 
-			# Initialize a new SSH host...
-			if gateway
-				ssh_host = SSHHost.new( host_data, ssh_gateway_connected )
-			else
-				ssh_host = SSHHost.new( host_data )
-			end
+			ssh_host = nil
+			# We use OpenSSH client for starting interactive SSH sessions
+			# Did not find a way to do it with Net:SSH v2
+			if action != "ssh"
+				# Initialize a new SSH host...
+				if gateway
+					ssh_host = SSHHost.new( host_data, ssh_gateway_connected )
+				else
+					ssh_host = SSHHost.new( host_data )
+				end
 
-			# ... and connect to it
-			ssh = ssh_host.connect
+				# ... and connect to it
+				ssh = ssh_host.connect
+			end
 			
 			case action
 			when "list"
@@ -396,13 +401,24 @@ begin
 				end
 				# Commit the changes
 				authkeys.commit
+			when "ssh"
+				if gateway
+					ssh_gateway.gateway.open( host_data[:host], host_data[:port]) do | port |
+						puts "WARNING: No host key checking for hosts behind a gateway!"
+						puts "SSH'ing to #{host_data[:host]} via #{gateway}..."
+						system("ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null #{host_data[:user]}@localhost -p #{port}")
+					end
+				else
+					puts "SSH'ing to #{host_data[:host]}..."
+					system("ssh #{host_data[:user]}@#{host_data[:host]} -p#{host_data[:port]}")
+				end
 			else
 				# Should not be reachable
 				raise( "Unsupported action." )
 			end
 			
 			# Disconnect from the host
-			ssh_host.disconnect
+			ssh_host.disconnect if ssh_host
 
 		end # hosts.each do
 
