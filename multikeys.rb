@@ -415,13 +415,9 @@ begin
 				# ... and connect to it
 				begin
 					ssh = ssh_host.connect
-				rescue Errno::EHOSTUNREACH, Net::SSH::AuthenticationFailed => exc
-					case exc
-					when Errno::EHOSTUNREACH
-						STDERR.puts "ERROR: Could not reach host #{host}! Skipping it..."
-					when Net::SSH::AuthenticationFailed
-						STDERR.puts "ERROR: Authentication failed for host #{host_data[:user]}@#{host}! Skipping it..."
-					end
+				rescue Errno::EHOSTUNREACH, Net::SSH::AuthenticationFailed, SocketError => exception
+					STDERR.puts "ERROR: Error connecting #{host}! Skipping it..."
+					STDERR.puts "#{exception.class}: #{exception.message}"
 					next
 				end
 			end
