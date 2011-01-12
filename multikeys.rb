@@ -61,7 +61,7 @@ class SSHAuthKeys
 					comment = matchdata[2]
 					# Key already there?
 					if @authkeys.to_s.index(base64)
-						puts "Key #{comment} already there. Skipped."
+						puts "Key #{comment} already there. Skipped adding it."
 					else
 						# Add the key
 						@authkeys += [ line ]
@@ -94,11 +94,11 @@ class SSHAuthKeys
 							if line.index(base64)
 								@authkeys.delete( line )
 								@changed = true
-								puts "Key #{comment} deleted."
+								puts "Key #{comment} removed."
 							end
 						end
 					else
-						puts "Key #{comment} is not there. Skipped."
+						puts "Key #{comment} is not there. Skipped removing it."
 					end # Key there?
 				end # Is this a key?
 			end # Add keys in the file
@@ -268,9 +268,14 @@ def read_keylist(file)
 		# Remove linefeed, comment and whitespace
 		clean_line = line.chomp.match(/^([^#]*)/)[1].strip
 
+		# Add a "+" before host if it does not already have
+		# a + or - before it
+		clean_line = "+" + clean_line if clean_line =~ /^[^+-]/
+
 		# Add key
 		keys << clean_line if clean_line.length > 0
 	end
+
 	return keys
 end
 # }}}
@@ -324,7 +329,7 @@ begin
 
 	action = ARGV[0] || raise( "Need an action in order to do something." )
 	
-	raise ( "Unsupported action." ) if not ( action == "add" or action == "remove" or action == "list" )
+	raise ( "Unsupported action." ) if not ( action == "add" or action == "remove" or action == "addremove" or action == "list" )
 	
 	raise ( "Need a keyfile." ) if keys == nil and not ( action == "list" )
 
@@ -363,14 +368,30 @@ begin
 			when "add"
 				authkeys = SSHAuthKeys.new( ssh )
 				keys.each do | key | 
-					authkeys.addkeyfile( key )
+					# ignore +/- sign for add action
+					# keys should possibly be a hash, but stripping the +/- works for now
+					authkeys.addkeyfile( key[1..-1] )
 				end
 				# Commit the changes
 				authkeys.commit
 			when "remove"
 				authkeys = SSHAuthKeys.new( ssh )
 				keys.each do | key | 
-					authkeys.removekeyfile( key )
+					# ignore +/- sign for remove action
+					# keys should possibly be a hash, but stripping the +/- works for now
+					authkeys.removekeyfile( key[1..-1] )
+				end
+				# Commit the changes
+				authkeys.commit
+			when "addremove"
+				authkeys = SSHAuthKeys.new( ssh )
+				# add or remove depending on + or - sign
+				keys.each do | key | 
+					if key[0] == '-'[0]
+						authkeys.removekeyfile( key[1..-1] )
+					else
+						authkeys.addkeyfile( key[1..-1] )
+					end
 				end
 				# Commit the changes
 				authkeys.commit
@@ -395,8 +416,9 @@ rescue OptionParser::ParseError => exc
 	# raise
   STDERR.puts opts.to_s
 	puts "\nSupported actions:"
-	puts "add:    add key(s)."
-	puts "remove: remove key(s)."
+	puts "add:       add key(s)."
+	puts "remove:    remove key(s)."
+	puts "addremove: add keys, then remove keys with \"-\" before filename"
   exit 1
 # }}}
 end
