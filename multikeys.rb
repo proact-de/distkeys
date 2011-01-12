@@ -427,7 +427,7 @@ begin
 				rescue Errno::EHOSTUNREACH, Errno::ECONNREFUSED, Net::SSH::AuthenticationFailed, SocketError => exception
 					STDERR.puts "#{exception.class}: #{exception.message}"
 					if exception.class == Net::SSH::AuthenticationFailed
-						puts "Password (or RETURN for skipping the host): "
+						puts "Password - is shown as you type! - (RETURN for skipping the host): "
 						password = STDIN.readline.chomp.strip
 						retry if password.length>0
 					end
