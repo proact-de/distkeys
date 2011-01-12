@@ -224,16 +224,58 @@ def connection_info(url)
 end
 #}}}
 
+# {{{ read_hostlist
+def read_hostlist(file)
+	gwhosts = [ ]
+	gateway = nil
+	File.open(file).each do |line|
+		clean_line = line.chomp.strip
+		if clean_line =~ /^[^#]+$/
+			# a "gateway" statement?
+			if matchdata = clean_line.match( /^gateway (\S+)/ )
+				gateway = matchdata[1]
+			# a "end" statement
+			elsif clean_line =~ /^end$/
+				gateway = nil
+			# a host?
+			else
+				# Gateway already in structure?
+				if i = gwhosts.index{ | gw | gw['gateway'] == gateway }
+					# Add host to it
+					gwhosts[i]['hosts'] += [ clean_line ]
+				else
+					# Add a new entry for the gateway
+					gwhosts += [ 
+						{
+							'gateway' => gateway,
+							'hosts' => [ clean_line ]
+						}
+					]
+				end
+			end
+		end
+	end # File.open
+	return gwhosts
+end
+# }}}
+
 # Parse options
 host = nil
+hostlist = nil
 keys = [ ]
 gateway = nil
+gwhosts = nil
 
 opts = OptionParser.new do | opt |
 	opt.banner = "Usage "+$0.to_s+" <optionen> <aktion>"
 
 	opt.on( "-H", "--host <host>", "Host to connect to (Syntax: [user@]host[:port])." ) do | value |
 		host = value.to_s
+	end
+
+	opt.on( "-h", "--hostlist <hostlist>", "File with hosts to connect to." ) do | value |
+		hostlist = value.to_s
+		gwhosts = read_hostlist( hostlist )
 	end
 
 	opt.on( "-K", "--key <key>", "Keyfile to add or remove from the server." ) do | value |
