@@ -1,5 +1,6 @@
 #!/usr/bin/env ruby
 
+require 'net/ssh'
 require 'net/ssh/gateway'
 require 'net/sftp'
 
