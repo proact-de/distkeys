@@ -415,7 +415,7 @@ begin
 				# ... and connect to it
 				begin
 					ssh = ssh_host.connect
-				rescue Errno::EHOSTUNREACH, Net::SSH::AuthenticationFailed, SocketError => exception
+				rescue Errno::EHOSTUNREACH, Errno::ECONNREFUSED, Net::SSH::AuthenticationFailed, SocketError => exception
 					STDERR.puts "ERROR: Error connecting #{host}! Skipping it..."
 					STDERR.puts "#{exception.class}: #{exception.message}"
 					next
