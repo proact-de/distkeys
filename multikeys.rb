@@ -196,13 +196,13 @@ class SSHHost
 	end
 
 	# Connect and return an Net::SSH object
-	def connect()
+	def connect( password = nil )
 		if @gateway
 			puts "Connecting to host #{@host} via gateway..."
-			@ssh = @gateway.ssh(@host, @user, :port => @port, :compression => false )
+			@ssh = @gateway.ssh(@host, @user, { :port => @port,  :compression => false, :password => password } )
 		else
 			puts "Connecting to host #{@host}..."
-			@ssh = Net::SSH.start(@host, @user, :port => @port, :compression => false )
+			@ssh = Net::SSH.start(@host, @user,  { :port => @port, :compression => false, :password => password } )
 		end
 		return @ssh
 	end
@@ -413,12 +413,18 @@ begin
 				end
 
 				# ... and connect to it
+				password = nil
 				begin
-					ssh = ssh_host.connect
+					ssh = ssh_host.connect( password )
 				# FIXME put error handling into the SSHHost class?
 				rescue Errno::EHOSTUNREACH, Errno::ECONNREFUSED, Net::SSH::AuthenticationFailed, SocketError => exception
-					STDERR.puts "ERROR: Error connecting #{host}! Skipping it..."
 					STDERR.puts "#{exception.class}: #{exception.message}"
+					if exception.class == Net::SSH::AuthenticationFailed
+						puts "Password (or RETURN for skipping the host): "
+						password = STDIN.readline.chomp.strip
+						retry if password.length>0
+					end
+					STDERR.puts "ERROR: Error connecting #{host}! Skipping it..."
 					next
 				end
 			end
