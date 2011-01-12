@@ -33,7 +33,14 @@ class SSHAuthKeys
 		@sftp = Net::SFTP::Session.new(@ssh)
 		@sftp.loop { @sftp.opening? }
 		
-		@authkeys_flat = @sftp.download!( authkeyfile )
+		begin
+			@authkeys_flat = @sftp.download!( authkeyfile )
+		rescue RuntimeError => exception
+			puts	exception.message
+			puts "ERROR: Can't open authorized_keys"
+			puts "Assuming that no keys are stored on the server"
+		end
+
 		@authkeys = @authkeys_flat.to_a
 		@sftp.loop
 	end
