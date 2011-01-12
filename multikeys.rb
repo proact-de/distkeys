@@ -281,6 +281,17 @@ def read_keylist(file)
 end
 # }}}
 
+# {{{ read_char
+# Read a single char from stdin
+# http://rubyquiz.com/quiz5.html
+def read_char
+		system "stty raw -echo"
+		return STDIN.getc
+ensure
+		system "stty -raw echo"
+end
+# }}}
+
 # Parse options
 host = nil
 hostlist = nil
@@ -288,6 +299,7 @@ keys = [ ]
 keyfile = nil
 gateway = nil
 gwhosts = nil
+interactive = false
 
 opts = OptionParser.new do | opt |
 	opt.banner = "Usage "+$0.to_s+" <optionen> <aktion>"
@@ -312,6 +324,10 @@ opts = OptionParser.new do | opt |
 
 	opt.on( "-G", "--gateway <gateway>", "Gateway to access the host via port forwarding." ) do | value |
 		gateway = value.to_s
+	end
+	
+	opt.on( "-i", "--interactive", "Ask before each operation on a host." ) do
+		interactive = true
 	end
 end
 
@@ -338,6 +354,8 @@ begin
 		gateway = gwhost['gateway']
 		hosts = gwhost['hosts']
 		
+		puts "Gateway: #{gateway}." if gateway
+		
 		# Gateway?
 		if gateway
 			gateway_data = connection_info( gateway )
@@ -350,6 +368,30 @@ begin
 		end
 
 		hosts.each do | host |
+			puts "Host: #{host}."
+			
+			# {{{ interactive mode
+			if interactive == true then
+				skip = false
+				puts "Continue (RETURN), skip this host (s), quit (q)?"
+				begin
+					char = read_char()
+					# Bei q oder Q abbrechen
+					if char == 81 or char == 113 then
+						exit 0
+					end
+					# Bei S den Eintrag ueberspringen
+					if char == 83 or char == 115
+						skip = true
+						char = 13
+					end
+				end until char == 13
+			end
+			# }}} interactive mode
+
+			# Den aktuellen Eintrag dann wirklich ueberspringen
+			next if skip == true
+			
 			host_data = connection_info( host )
 
 			ssh_host = nil
