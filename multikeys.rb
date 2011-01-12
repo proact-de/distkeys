@@ -415,6 +415,7 @@ begin
 				# ... and connect to it
 				begin
 					ssh = ssh_host.connect
+				# FIXME put error handling into the SSHHost class?
 				rescue Errno::EHOSTUNREACH, Errno::ECONNREFUSED, Net::SSH::AuthenticationFailed, SocketError => exception
 					STDERR.puts "ERROR: Error connecting #{host}! Skipping it..."
 					STDERR.puts "#{exception.class}: #{exception.message}"
