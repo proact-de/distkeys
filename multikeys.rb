@@ -261,10 +261,25 @@ def read_hostlist(file)
 end
 # }}}
 
+# {{{ read_keylist
+def read_keylist(file)
+	keys = [ ]
+	File.open(file).each do |line|
+		# Remove linefeed, comment and whitespace
+		clean_line = line.chomp.match(/^([^#]*)/)[1].strip
+
+		# Add key
+		keys << clean_line if clean_line.length > 0
+	end
+	return keys
+end
+# }}}
+
 # Parse options
 host = nil
 hostlist = nil
 keys = [ ]
+keyfile = nil
 gateway = nil
 gwhosts = nil
 
@@ -282,6 +297,11 @@ opts = OptionParser.new do | opt |
 
 	opt.on( "-K", "--key <key>", "Keyfile to add or remove from the server." ) do | value |
 		keys = [ value.to_s ]
+	end
+
+	opt.on( "-k", "--keylist <keylist>", "File with names of keyfiles to add or remove.") do | value |
+		keylist = value.to_s
+		keys = read_keylist( keylist )
 	end
 
 	opt.on( "-G", "--gateway <gateway>", "Gateway to access the host via port forwarding." ) do | value |
