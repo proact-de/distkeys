@@ -265,7 +265,11 @@ end
 # {{{ read_keylist
 def read_keylist(file)
 	keys = [ ]
-	File.open(file).each do |line|
+	# Get path of the keylist file directory
+	# and append it to each file so that relative
+	# pathes in keylist files work correctly
+	path = File.dirname(file)
+	File.open( file ).each do |line|
 		# Remove linefeed, comment and whitespace
 		clean_line = line.chomp.match(/^([^#]*)/)[1].strip
 
@@ -274,7 +278,10 @@ def read_keylist(file)
 		clean_line = "+" + clean_line if clean_line =~ /^[^+-]/
 
 		# Add key
-		keys << clean_line if clean_line.length > 0
+		# Compose string of first character + File.Join of path and everything
+		# from second character
+		# FIXME Fix this crude hack and make a hash out of it or something.
+		keys << clean_line[0..0] + File.join( path, clean_line[1..-1] ) if clean_line.length > 0
 	end
 
 	return keys
