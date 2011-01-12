@@ -229,8 +229,10 @@ def read_hostlist(file)
 	gwhosts = [ ]
 	gateway = nil
 	File.open(file).each do |line|
-		clean_line = line.chomp.strip
-		if clean_line =~ /^[^#]+$/
+		# Remove linefeed, comment and whitespace
+		clean_line = line.chomp.match(/^([^#]*)/)[1].strip
+		if clean_line.length > 0
+			# Strip possible in-line comment
 			# a "gateway" statement?
 			if matchdata = clean_line.match( /^gateway (\S+)/ )
 				gateway = matchdata[1]
