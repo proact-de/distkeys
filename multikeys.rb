@@ -356,9 +356,9 @@ begin
 
 	action = ARGV[0] || raise( "Need an action in order to do something." )
 	
-	raise ( "Unsupported action." ) if not ( action == "add" or action == "remove" or action == "addremove" or action == "list" or action == "ssh" )
+	raise OptionParser::ParseError, ( "Unsupported action." ) if not ( action == "add" or action == "remove" or action == "addremove" or action == "list" or action == "ssh" )
 	
-	raise ( "Need a keyfile." ) if keys == nil and not ( action == "list" )
+	raise OptionParser::ParseError, ( "Need a keyfile." ) if keys == nil and not ( action == "list" )
 
 	gwhosts.each do | gwhost |
 		gateway = gwhost['gateway']
@@ -494,7 +494,7 @@ begin
 				end
 			else
 				# Should not be reachable
-				raise( "Unsupported action." )
+				raise( OptionParser::ParseError, "Unsupported action." )
 			end
 			
 			# Disconnect from the host
