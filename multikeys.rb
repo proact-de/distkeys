@@ -250,7 +250,6 @@ class SSHHost
 				password = STDIN.readline.chomp.strip
 				retry if password.length>0
 			end
-			STDERR.puts "ERROR: Error connecting #{@host}! Skipping it..."
 			return false
 		end
 		return @ssh
@@ -529,9 +528,13 @@ class GWHosts
 					end
 				end
 			else
-				if handle_host( gwhost, ssh_gateway ) == LEAVE
+				rc = handle_host( gwhost, ssh_gateway )
+				case rc
+				when LEAVE
 					leave = true
 					break
+				when false
+					STDERR.puts "ERROR: Error connecting #{gwhost}! Skipping it..."
 				end
 			end
 		end
