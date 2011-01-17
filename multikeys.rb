@@ -65,6 +65,14 @@ class SSHAuthKeys
 				if line.index("ssh-")
 					# Extract base64 from key
 					matchdata = line.match(/ssh-[^ ]+\s+([A-Za-z0-9=+\/]+) (.*$)/)
+					# Bail out if it does not appear to be a valid authorized key
+					if not matchdata
+						puts "ERROR: The following does not seem to be a valid authorized key."
+						puts line
+						puts "Aborting parsing this keyfile list..."
+						return false
+					end
+
 					base64 = matchdata[1]
 					comment = matchdata[2]
 					# Key already there?
@@ -93,6 +101,13 @@ class SSHAuthKeys
 				if line.index("ssh-")
 					# Extract base64 from key
 					matchdata = line.match(/ssh-[^ ]+\s+([A-Za-z0-9=+\/]+) (.*$)/)
+					if not matchdata
+						puts "ERROR: The following does not seem to be a valid authorized key."
+						puts line
+						puts "Aborting parsing this keyfile list..."
+						return false
+					end
+
 					base64 = matchdata[1]
 					comment = matchdata[2]
 					# Key there?
