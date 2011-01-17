@@ -627,8 +627,11 @@ rescue OptionParser::ParseError => exc
 	puts "\nSupported actions:"
 	puts "add:       Add or update key(s). Replaces a key if base64 matches,"
 	puts "           but description or arguments differ."
-	puts "remove:    Remove key(s)."
 	puts "addremove: Add keys, then remove keys with \"-\" before filename"
+	puts "hostname:  Show hostzname."
+	puts "list:      List authorized keys."
+	puts "remove:    Remove key(s)."
+	puts "ssh:       Start interactive SSH session."
   exit 1
 # }}}
 end
