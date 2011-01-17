@@ -158,12 +158,6 @@ class SSHAuthKeys
 
 end
 
-#gateway = Net::SSH::Gateway.new('99.99.99.99', 'root')
-
-#authkeys = SSHAuthKeys.new( gateway.ssh('111.111.111', 'root') )
-
-#gateway.shutdown!
-
 class SSHGateway
 	# Net::SSH::Gateway instance
 	attr_reader :gateway
