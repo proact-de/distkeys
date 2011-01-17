@@ -54,7 +54,8 @@ class SSHAuthKeys
 		end
 	end
 
-	# Add a key file
+	# {{{ Add a key file
+	# Replaces it, if the base64 matches, but arguments or comment are different
 	def addkeyfile( keyfile )
 		if File.exists?( keyfile )
 			key = File.new( keyfile, "r" ).to_a
@@ -76,8 +77,14 @@ class SSHAuthKeys
 					base64 = matchdata[1]
 					comment = matchdata[2]
 					# Key already there?
-					if @authkeys.to_s.index(base64)
-						puts "Key #{comment} already there. Skipped adding it."
+					if index = @authkeys.index{ | str | str.include?( base64 ) }
+						if @authkeys[ index ] == line
+							puts "Key #{comment} already there and identical. Skipped adding it."
+						else
+							puts "Key #{comment} already there, with different arguments or description. Replacing it..."
+							@authkeys[ index ] = line
+							@changed = true
+						end
 					else
 						# Add the key
 						@authkeys += [ line ]
@@ -90,6 +97,7 @@ class SSHAuthKeys
 			puts "ERROR: Keyfile #{keyfile} does not exist. Skipped."
 		end
 	end
+	# }}}
 	
 	def removekeyfile( keyfile )
 		if File.exists?( keyfile )
@@ -617,9 +625,10 @@ rescue OptionParser::ParseError => exc
 	STDERR.puts exc.message
   STDERR.puts opts.to_s
 	puts "\nSupported actions:"
-	puts "add:       add key(s)."
-	puts "remove:    remove key(s)."
-	puts "addremove: add keys, then remove keys with \"-\" before filename"
+	puts "add:       Add or update key(s). Replaces a key if base64 matches,"
+	puts "           but description or arguments differ."
+	puts "remove:    Remove key(s)."
+	puts "addremove: Add keys, then remove keys with \"-\" before filename"
   exit 1
 # }}}
 end
