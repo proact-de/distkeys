@@ -499,7 +499,7 @@ class GWHosts
 			authkeys.commit
 		when "ssh"
 			if gateway
-				ssh_gateway.gateway.open( host_data[:host], host_data[:port]) do | port |
+				gateway.gateway.open( host_data[:host], host_data[:port]) do | port |
 					puts "WARNING: No host key checking for hosts behind a gateway!"
 					puts "SSH'ing to #{host_data[:host]} via #{gateway}..."
 					system("ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null #{host_data[:user]}@localhost -p #{port}")
