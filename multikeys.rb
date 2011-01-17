@@ -177,18 +177,29 @@ class SSHGateway
 	# Net::SSH::Gateway instance
 	attr_reader :gateway
 	
+	# Gateway host data
+	attr_reader :host, :port, :user
+	
 	# Takes a hash with host, port, user as returned from connection_info
-	def initialize( hostdata )
+	def initialize( hostdata, betweengateway = nil )
 		@host = hostdata[:host]
 		@port = hostdata[:port]
 		@user = hostdata[:user]
+
+		@betweengw = betweengateway
 	end
 
 	# Connect and return an Net::SSH::Gateway object
 	def connect()
-		puts "Connecting to gateway #{@host}..."
-		@gateway = Net::SSH::Gateway.new(@host, @user, :port => @port, :compression => false )
-
+		if @betweengw
+			puts "Connecting to gateway #{@host} behind #{@betweengw.host}."
+			if @betweengwport = @betweengw.gateway.open( @host, @port )
+				@gateway = Net::SSH::Gateway.new( "localhost", @user, :port => @betweengwport, :compression => false )
+			end
+		else
+			puts "Connecting to gateway #{@host}..."
+			@gateway = Net::SSH::Gateway.new(@host, @user, :port => @port, :compression => false )
+		end
 		return @gateway
 	end
 
@@ -241,43 +252,6 @@ def connection_info(url)
 end
 #}}}
 
-# {{{ read_hostlist
-def read_hostlist(file)
-	gwhosts = [ ]
-	gateway = nil
-	File.open(file).each do |line|
-		# Remove linefeed, comment and whitespace
-		clean_line = line.chomp.match(/^([^#]*)/)[1].strip
-		if clean_line.length > 0
-			# Strip possible in-line comment
-			# a "gateway" statement?
-			if matchdata = clean_line.match( /^gateway (\S+)/ )
-				gateway = matchdata[1]
-			# a "end" statement
-			elsif clean_line =~ /^end$/
-				gateway = nil
-			# a host?
-			else
-				# Gateway already in structure?
-				if i = gwhosts.index{ | gw | gw['gateway'] == gateway }
-					# Add host to it
-					gwhosts[i]['hosts'] += [ clean_line ]
-				else
-					# Add a new entry for the gateway
-					gwhosts += [ 
-						{
-							'gateway' => gateway,
-							'hosts' => [ clean_line ]
-						}
-					]
-				end
-			end
-		end
-	end # File.open
-	return gwhosts
-end
-# }}}
-
 # {{{ read_keylist
 def read_keylist( file )
 	keys = [ ]
@@ -317,13 +291,252 @@ ensure
 end
 # }}}
 
+def read_hostlist_entry( list, index )
+	gwhosts = []
+
+	while index < list.count
+	# Remove linefeed, comment and whitespace
+	clean_line = list[ index ].chomp.match(/^([^#]*)/)[1].strip
+
+		if clean_line.length > 0
+			# a "gateway" statement?
+				if matchdata = clean_line.match( /^gateway (\S+)/ )
+					gateway = matchdata[1] 
+					gwhosts << { gateway => [ ] }
+
+					# recursively call us self
+					gwhosts.last[gateway], index = read_hostlist_entry( list, index + 1 )
+				# an "end" statement?
+				elsif clean_line =~ /^end$/
+					return gwhosts, index
+				# a host
+				else
+					gwhosts << clean_line
+				end
+		end
+
+		index = index + 1
+	end # while
+
+	return gwhosts, index
+end
+
+# {{{ read_hostlist
+def read_hostlist( file )
+	gwhosts = [ ]
+
+	# Read file into array
+	list = File.open(file, "r").to_a
+
+	# read all hosts and gateways recursively
+	gwhosts, dummy = read_hostlist_entry( list, 0 )
+
+	return gwhosts
+end
+# }}}
+
+class GWHosts
+
+	# Return code for leaving the gwhost recursion immediately
+	LEAVE = 80000004
+
+	def initialize( gwhosts, args )
+		@gwhosts = gwhosts
+
+		@interactive = args['interactive']
+		@action = args['action']
+		@keys = args['keys']
+	end
+	
+	def handle_gateway( gateway, betweengateway = nil )
+		gateway_data = connection_info( gateway )
+
+		# Initialize a new gateway...
+		ssh_gateway = nil
+		if betweengateway
+			ssh_gateway = SSHGateway.new( gateway_data, betweengateway )
+		else
+			ssh_gateway = SSHGateway.new( gateway_data )
+		end
+
+		# ... and connect to it
+		ssh_gateway.connect
+
+		return ssh_gateway
+	end
+	
+	# {{{ handle a single host }}}
+	def handle_host( host, gateway = nil )
+		if gateway
+			puts "Host: #{host} via #{gateway.host}"
+		else
+			puts "Host: #{host}"
+		end
+		
+		# {{{ interactive mode
+		if @interactive == true then
+			skip = false
+			puts "Continue (RETURN), skip this host (s), quit (q)?"
+			begin
+				char = read_char()
+				# Bei q oder Q abbrechen
+				if char == 81 or char == 113 then
+					# leave the gwhost recursion immediately
+					return LEAVE
+				end
+				# Bei S den Eintrag ueberspringen
+				if char == 83 or char == 115
+					skip = true
+					char = 13
+				end
+			end until char == 13
+		end
+		# }}} interactive mode
+
+		# Den aktuellen Eintrag dann wirklich ueberspringen
+		return true if skip
+
+		host_data = connection_info( host )
+
+		ssh_host = nil
+		# We use OpenSSH client for starting interactive SSH sessions
+		# Did not find a way to do it with Net:SSH v2
+		if @action != "ssh"
+			# Initialize a new SSH host...
+			if gateway
+				ssh_host = SSHHost.new( host_data, gateway.gateway )
+			else
+				ssh_host = SSHHost.new( host_data )
+			end
+
+			# ... and connect to it
+			password = nil
+			begin
+				ssh = ssh_host.connect( password )
+			# FIXME put error handling into the SSHHost class?
+			rescue Errno::EHOSTUNREACH, Errno::ECONNREFUSED, Net::SSH::AuthenticationFailed, SocketError => exception
+				STDERR.puts "#{exception.class}: #{exception.message}"
+				if exception.class == Net::SSH::AuthenticationFailed
+					puts "Password - is shown as you type! - (RETURN for skipping the host): "
+					password = STDIN.readline.chomp.strip
+					retry if password.length>0
+				end
+				STDERR.puts "ERROR: Error connecting #{host}! Skipping it..."
+				return false
+			end
+		end
+
+		case @action
+		when "list"
+			authkeys = SSHAuthKeys.new( ssh )
+			authkeys.list
+		when "hostname"
+			puts ssh.exec!("hostname")
+		when "add"
+			authkeys = SSHAuthKeys.new( ssh )
+			@keys.each do | key |
+				# [0] should return a substring according to the String class documentation,
+				# but it returns a FixNum with the ASCII code instead. [0..0] works as expected
+				if key[0..0] == '+' or key[0..0] == '-'
+					raise OptionParser::ParseError, "ERROR: +/- in keylist is only valid for addremove action."
+				end
+			end
+			@keys.each do | key |
+				authkeys.addkeyfile( key )
+			end
+			# Commit the changes
+			authkeys.commit
+		when "remove"
+			authkeys = SSHAuthKeys.new( ssh )
+			@keys.each do | key |
+				# [0] should return a substring according to the String class documentation,
+				# but it returns a FixNum with the ASCII code instead. [0..0] works as expected
+				if key[0..0] == '+' or key[0..0] == '-'
+					raise OptionParser::ParseError, "ERROR: +/- in keylist is only valid for addremove action."
+				end
+			end
+			@keys.each do | key | 
+				authkeys.removekeyfile( key )
+			end
+			# Commit the changes
+			authkeys.commit
+		when "addremove"
+			authkeys = SSHAuthKeys.new( ssh )
+			# add or remove depending on + or - sign
+			@keys.each do | key | 
+				# [0] should return a substring according to the String class documentation,
+				# but it returns a FixNum with the ASCII code instead. [0..0] works
+				# as expected
+				if key[0..0] == '-'
+					authkeys.removekeyfile( key[1..-1] )
+				elsif key[0..0] == '+'
+					authkeys.addkeyfile( key[1..-1] )
+				else # if no + or - then add it as well
+					authkeys.addkeyfile( key )
+				end
+			end
+			# Commit the changes
+			authkeys.commit
+		when "ssh"
+			if gateway
+				ssh_gateway.gateway.open( host_data[:host], host_data[:port]) do | port |
+					puts "WARNING: No host key checking for hosts behind a gateway!"
+					puts "SSH'ing to #{host_data[:host]} via #{gateway}..."
+					system("ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null #{host_data[:user]}@localhost -p #{port}")
+				end
+			else
+				puts "SSH'ing to #{host_data[:host]}..."
+				system("ssh #{host_data[:user]}@#{host_data[:host]} -p#{host_data[:port]}")
+			end
+		else
+			# Should not be reachable
+			raise( OptionParser::ParseError, "Unsupported action." )
+		end
+				
+		# Disconnect from the host
+		ssh_host.disconnect if ssh_host
+	end
+
+	# {{{ handle_gw_host recursively
+	# level is for tracking recursion level
+	# leave is for leaving recursion before it finished
+	def handle_gwhost( gwhosts, level = 0, leave = false, ssh_gateway = nil )
+		return true if leave
+
+		gwhosts.each do | gwhost |
+			if gwhost.class == Hash
+				gwhost.each do| gateway, hostlist |
+					puts "Gateway: #{gateway}, Level #{level + 1}"
+					
+					ssh_gateway = handle_gateway( gateway, ssh_gateway )
+					
+					# Call ourselves recursively for handling nested gateways
+					handle_gwhost( hostlist, level + 1, leave, ssh_gateway)
+				end
+			else
+				if handle_host( gwhost, ssh_gateway ) == LEAVE
+					leave = true
+					break
+				end
+			end
+		end
+	end
+	# }}}
+	
+	# Do the magic
+	def loop()
+		handle_gwhost( @gwhosts )
+	end
+
+end
+
 # Parse options
 host = nil
 hostlist = nil
 keys = [ ]
 keyfile = nil
 gateway = nil
-gwhosts = nil
+gwhostlist = nil
 interactive = false
 
 opts = OptionParser.new do | opt |
@@ -335,7 +548,7 @@ opts = OptionParser.new do | opt |
 
 	opt.on( "-h", "--hostlist <hostlist>", "File with hosts to connect to." ) do | value |
 		hostlist = value.to_s
-		gwhosts = read_hostlist( hostlist )
+		gwhostlist = read_hostlist( hostlist )
 	end
 
 	opt.on( "-K", "--key <key>", "Keyfile to add or remove from the server." ) do | value |
@@ -363,165 +576,22 @@ begin
 	
 	# Transform gateway and host in our data structure for the loop
 	if host
-		gwhosts = [ {
-			'gateway' => gateway,
-			'hosts' => [ host ]
+		gwhostlist = [ {
+			gateway => [ host ]
 		} ]
 	end
 
 	action = ARGV[0] || raise( "Need an action in order to do something." )
 	
-	raise OptionParser::ParseError, ( "Unsupported action." ) if not ( action == "add" or action == "remove" or action == "addremove" or action == "list" or action == "ssh" )
+	raise OptionParser::ParseError, ( "Unsupported action." ) if not ( action == "add" or action == "remove" or action == "addremove" or action == "list" or action == "ssh" or action == "hostname" )
 	
 	raise OptionParser::ParseError, ( "Need a keyfile." ) if keys == nil and not ( action == "list" )
 
-	gwhosts.each do | gwhost |
-		gateway = gwhost['gateway']
-		hosts = gwhost['hosts']
-		
-		puts "Gateway: #{gateway}." if gateway
-		
-		# Gateway?
-		if gateway
-			gateway_data = connection_info( gateway )
-			
-			# Initialize a new gateway...
-			ssh_gateway = SSHGateway.new( gateway_data )
-			
-			# ... and connect to it
-			ssh_gateway_connected = ssh_gateway.connect
-		end
+	# handle gateways and hosts recursively
+	gwhosts = GWHosts.new( gwhostlist, 'interactive' =>interactive, 'action' => action, 'keys' => keys )
 
-		hosts.each do | host |
-			puts "Host: #{host}."
-			
-			# {{{ interactive mode
-			if interactive == true then
-				skip = false
-				puts "Continue (RETURN), skip this host (s), quit (q)?"
-				begin
-					char = read_char()
-					# Bei q oder Q abbrechen
-					if char == 81 or char == 113 then
-						exit 0
-					end
-					# Bei S den Eintrag ueberspringen
-					if char == 83 or char == 115
-						skip = true
-						char = 13
-					end
-				end until char == 13
-			end
-			# }}} interactive mode
-
-			# Den aktuellen Eintrag dann wirklich ueberspringen
-			next if skip == true
-			
-			host_data = connection_info( host )
-
-			ssh_host = nil
-			# We use OpenSSH client for starting interactive SSH sessions
-			# Did not find a way to do it with Net:SSH v2
-			if action != "ssh"
-				# Initialize a new SSH host...
-				if gateway
-					ssh_host = SSHHost.new( host_data, ssh_gateway_connected )
-				else
-					ssh_host = SSHHost.new( host_data )
-				end
-
-				# ... and connect to it
-				password = nil
-				begin
-					ssh = ssh_host.connect( password )
-				# FIXME put error handling into the SSHHost class?
-				rescue Errno::EHOSTUNREACH, Errno::ECONNREFUSED, Net::SSH::AuthenticationFailed, SocketError => exception
-					STDERR.puts "#{exception.class}: #{exception.message}"
-					if exception.class == Net::SSH::AuthenticationFailed
-						puts "Password - is shown as you type! - (RETURN for skipping the host): "
-						password = STDIN.readline.chomp.strip
-						retry if password.length>0
-					end
-					STDERR.puts "ERROR: Error connecting #{host}! Skipping it..."
-					next
-				end
-			end
-			
-			case action
-			when "list"
-				authkeys = SSHAuthKeys.new( ssh )
-				authkeys.list
-			when "add"
-				authkeys = SSHAuthKeys.new( ssh )
-				keys.each do | key |
-					# [0] should return a substring according to the String class documentation,
-					# but it returns a FixNum with the ASCII code instead. [0..0] works as expected
-					if key[0..0] == '+' or key[0..0] == '-'
-						raise OptionParser::ParseError, "ERROR: +/- in keylist is only valid for addremove action."
-					end
-				end
-				keys.each do | key |
-					authkeys.addkeyfile( key )
-				end
-				# Commit the changes
-				authkeys.commit
-			when "remove"
-				authkeys = SSHAuthKeys.new( ssh )
-				keys.each do | key |
-					# [0] should return a substring according to the String class documentation,
-					# but it returns a FixNum with the ASCII code instead. [0..0] works as expected
-					if key[0..0] == '+' or key[0..0] == '-'
-						raise OptionParser::ParseError, "ERROR: +/- in keylist is only valid for addremove action."
-					end
-				end
-				keys.each do | key | 
-					authkeys.removekeyfile( key )
-				end
-				# Commit the changes
-				authkeys.commit
-			when "addremove"
-				authkeys = SSHAuthKeys.new( ssh )
-				# add or remove depending on + or - sign
-				keys.each do | key | 
-					# [0] should return a substring according to the String class documentation,
-					# but it returns a FixNum with the ASCII code instead. [0..0] works
-					# as expected
-					if key[0..0] == '-'
-						authkeys.removekeyfile( key[1..-1] )
-					elsif key[0..0] == '+'
-						authkeys.addkeyfile( key[1..-1] )
-					else # if no + or - then add it as well
-						authkeys.addkeyfile( key )
-					end
-				end
-				# Commit the changes
-				authkeys.commit
-			when "ssh"
-				if gateway
-					ssh_gateway.gateway.open( host_data[:host], host_data[:port]) do | port |
-						puts "WARNING: No host key checking for hosts behind a gateway!"
-						puts "SSH'ing to #{host_data[:host]} via #{gateway}..."
-						system("ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null #{host_data[:user]}@localhost -p #{port}")
-					end
-				else
-					puts "SSH'ing to #{host_data[:host]}..."
-					system("ssh #{host_data[:user]}@#{host_data[:host]} -p#{host_data[:port]}")
-				end
-			else
-				# Should not be reachable
-				raise( OptionParser::ParseError, "Unsupported action." )
-			end
-			
-			# Disconnect from the host
-			ssh_host.disconnect if ssh_host
-
-		end # hosts.each do
-
-		# Disconnect from the gateway
-		if ssh_gateway
-			ssh_gateway.disconnect
-		end
-	end # gateway.each do
+	# Do the magic
+	gwhosts.loop
 
 # {{{ error handling
 rescue OptionParser::ParseError => exc
