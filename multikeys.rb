@@ -79,7 +79,7 @@ class SSHAuthKeys
 				end # Is this a key?
 			end # Add keys in the file
 		else
-			puts "ERROR: Keyfile does not exist."
+			puts "ERROR: Keyfile #{keyfile} does not exist."
 		end
 	end
 	
@@ -111,7 +111,7 @@ class SSHAuthKeys
 				end # Is this a key?
 			end # Add keys in the file
 		else
-			puts "ERROR: Keyfile does not exist."
+			puts "ERROR: Keyfile #{keyfile}does not exist."
 		end
 	end
 	
@@ -264,7 +264,7 @@ end
 # }}}
 
 # {{{ read_keylist
-def read_keylist(file)
+def read_keylist( file )
 	keys = [ ]
 	# Get path of the keylist file directory
 	# and append it to each file so that relative
@@ -274,16 +274,18 @@ def read_keylist(file)
 		# Remove linefeed, comment and whitespace
 		clean_line = line.chomp.match(/^([^#]*)/)[1].strip
 
-		# Add a "+" before host if it does not already have
-		# a + or - before it
-		clean_line = "+" + clean_line if clean_line =~ /^[^+-]/
-
 		# Add key
-		# Compose string of first character + File.Join of path and everything
-		# from second character
-		# FIXME Fix this crude hack and make a hash out of it or something.
-		keys << clean_line[0..0] + File.join( path, clean_line[1..-1] ) if clean_line.length > 0
-	end
+		if clean_line.length > 0
+			# [0] should return a substring according to the String class documentation,
+			# but it returns a FixNum with the ASCII code instead. [0..0] works as expected
+			if clean_line[0..0] == '+' or clean_line[0..0] == '-'
+				keys << clean_line[0..0] + File.join( path, clean_line[1..-1] )
+			elsif
+				keys << File.join( path, clean_line)
+			end
+		end
+
+	end # File.open
 
 	return keys
 end
@@ -436,19 +438,29 @@ begin
 				authkeys.list
 			when "add"
 				authkeys = SSHAuthKeys.new( ssh )
-				keys.each do | key | 
-					# ignore +/- sign for add action
-					# keys should possibly be a hash, but stripping the +/- works for now
-					authkeys.addkeyfile( key[1..-1] )
+				keys.each do | key |
+					# [0] should return a substring according to the String class documentation,
+					# but it returns a FixNum with the ASCII code instead. [0..0] works as expected
+					if key[0..0] == '+' or key[0..0] == '-'
+						raise OptionParser::ParseError, "ERROR: +/- in keylist is only valid for addremove action."
+					end
+				end
+				keys.each do | key |
+					authkeys.addkeyfile( key )
 				end
 				# Commit the changes
 				authkeys.commit
 			when "remove"
 				authkeys = SSHAuthKeys.new( ssh )
+				keys.each do | key |
+					# [0] should return a substring according to the String class documentation,
+					# but it returns a FixNum with the ASCII code instead. [0..0] works as expected
+					if key[0..0] == '+' or key[0..0] == '-'
+						raise OptionParser::ParseError, "ERROR: +/- in keylist is only valid for addremove action."
+					end
+				end
 				keys.each do | key | 
-					# ignore +/- sign for remove action
-					# keys should possibly be a hash, but stripping the +/- works for now
-					authkeys.removekeyfile( key[1..-1] )
+					authkeys.removekeyfile( key )
 				end
 				# Commit the changes
 				authkeys.commit
@@ -456,10 +468,15 @@ begin
 				authkeys = SSHAuthKeys.new( ssh )
 				# add or remove depending on + or - sign
 				keys.each do | key | 
-					if key[0] == '-'[0]
+					# [0] should return a substring according to the String class documentation,
+					# but it returns a FixNum with the ASCII code instead. [0..0] works
+					# as expected
+					if key[0..0] == '-'
 						authkeys.removekeyfile( key[1..-1] )
-					else
+					elsif key[0..0] == '+'
 						authkeys.addkeyfile( key[1..-1] )
+					else # if no + or - then add it as well
+						authkeys.addkeyfile( key )
 					end
 				end
 				# Commit the changes
@@ -494,6 +511,7 @@ begin
 # {{{ error handling
 rescue OptionParser::ParseError => exc
 	# raise
+	STDERR.puts exc.message
   STDERR.puts opts.to_s
 	puts "\nSupported actions:"
 	puts "add:       add key(s)."
