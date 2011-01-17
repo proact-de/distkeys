@@ -87,7 +87,7 @@ class SSHAuthKeys
 				end # Is this a key?
 			end # Add keys in the file
 		else
-			puts "ERROR: Keyfile #{keyfile} does not exist."
+			puts "ERROR: Keyfile #{keyfile} does not exist. Skipped."
 		end
 	end
 	
@@ -126,7 +126,7 @@ class SSHAuthKeys
 				end # Is this a key?
 			end # Add keys in the file
 		else
-			puts "ERROR: Keyfile #{keyfile}does not exist."
+			puts "ERROR: Keyfile #{keyfile}does not exist. Skipped."
 		end
 	end
 	
