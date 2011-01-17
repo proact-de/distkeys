@@ -155,13 +155,26 @@ class SSHAuthKeys
 		newauthkeyfile = "#{@authkeyfile}-new"
 		puts "Uploading keys to #{newauthkeyfile}..."
 		wantedsize = 0
-		@sftp.file.open(newauthkeyfile , "w" ) do | file |
-			@authkeys.each do | line |
-				file.puts line
-				wantedsize += line.length
+		begin
+			@sftp.file.open(newauthkeyfile , "w" ) do | file |
+				@authkeys.each do | line |
+					file.puts line
+					wantedsize += line.length
+				end
+			end
+			@sftp.loop
+		rescue Net::SFTP::StatusException => exception
+			puts	exception.message
+			puts "ERROR: Can't open authorized_keys for writing! Skipped."
+		end
+
+		# Try to create ~/.ssh if it does not already exist
+		@sftp.lstat( "~/.ssh" ) do | response |
+			if not response.ok?
+				@ssh.exec!( "mkdir ~/.ssh" )
+				@ssh.exec!( "chmod 700 ~/.ssh" )
 			end
 		end
-		@sftp.loop
 
 		request = @sftp.lstat(newauthkeyfile) do | response |
 			if response.ok?
