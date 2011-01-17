@@ -1,0 +1,14 @@
+host1
+host2:2121
+gateway gw1
+	host3
+	host4
+	gateway gw2
+		host5
+		host6
+	end
+end
+host7
+gateway gw3
+	superduper@host8:12345
+end
