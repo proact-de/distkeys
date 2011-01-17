@@ -171,6 +171,7 @@ class SSHAuthKeys
 		# Try to create ~/.ssh if it does not already exist
 		@sftp.lstat( "~/.ssh" ) do | response |
 			if not response.ok?
+				puts "~/.ssh does not seem to exist, creating it with 700..."
 				@ssh.exec!( "mkdir ~/.ssh" )
 				@ssh.exec!( "chmod 700 ~/.ssh" )
 			end
