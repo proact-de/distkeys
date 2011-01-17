@@ -224,12 +224,23 @@ class SSHHost
 
 	# Connect and return an Net::SSH object
 	def connect( password = nil )
-		if @gateway
-			puts "Connecting to host #{@host} via gateway..."
-			@ssh = @gateway.ssh(@host, @user, { :port => @port,  :compression => false, :password => password } )
-		else
-			puts "Connecting to host #{@host}..."
-			@ssh = Net::SSH.start(@host, @user,  { :port => @port, :compression => false, :password => password } )
+		begin
+			if @gateway
+				puts "Connecting to host #{@host} via gateway..."
+				@ssh = @gateway.ssh(@host, @user, { :port => @port,  :compression => false, :password => password } )
+			else
+				puts "Connecting to host #{@host}..."
+				@ssh = Net::SSH.start(@host, @user,  { :port => @port, :compression => false, :password => password } )
+			end
+		rescue Errno::EHOSTUNREACH, Errno::ECONNREFUSED, Net::SSH::AuthenticationFailed, SocketError => exception
+			STDERR.puts "#{exception.class}: #{exception.message}"
+			if exception.class == Net::SSH::AuthenticationFailed
+				puts "Password - is shown as you type! - (RETURN for skipping the host): "
+				password = STDIN.readline.chomp.strip
+				retry if password.length>0
+			end
+			STDERR.puts "ERROR: Error connecting #{@host}! Skipping it..."
+			return false
 		end
 		return @ssh
 	end
@@ -410,18 +421,7 @@ class GWHosts
 			end
 
 			# ... and connect to it
-			password = nil
-			begin
-				ssh = ssh_host.connect( password )
-			# FIXME put error handling into the SSHHost class?
-			rescue Errno::EHOSTUNREACH, Errno::ECONNREFUSED, Net::SSH::AuthenticationFailed, SocketError => exception
-				STDERR.puts "#{exception.class}: #{exception.message}"
-				if exception.class == Net::SSH::AuthenticationFailed
-					puts "Password - is shown as you type! - (RETURN for skipping the host): "
-					password = STDIN.readline.chomp.strip
-					retry if password.length>0
-				end
-				STDERR.puts "ERROR: Error connecting #{host}! Skipping it..."
+			if not ssh = ssh_host.connect()
 				return false
 			end
 		end
