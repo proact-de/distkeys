@@ -191,15 +191,26 @@ class SSHGateway
 
 	# Connect and return an Net::SSH::Gateway object
 	def connect()
-		if @betweengw
-			puts "Connecting to gateway #{@host} behind #{@betweengw.host}."
-			if @betweengwport = @betweengw.gateway.open( @host, @port )
-				@gateway = Net::SSH::Gateway.new( "localhost", @user, :port => @betweengwport, :compression => false )
+		begin
+			if @betweengw
+				puts "Connecting to gateway #{@host} behind #{@betweengw.host}."
+				if @betweengwport = @betweengw.gateway.open( @host, @port )
+					@gateway = Net::SSH::Gateway.new( "localhost", @user, :port => @betweengwport, :compression => false )
+				end
+			else
+				puts "Connecting to gateway #{@host}..."
+				@gateway = Net::SSH::Gateway.new(@host, @user, :port => @port, :compression => false )
 			end
-		else
-			puts "Connecting to gateway #{@host}..."
-			@gateway = Net::SSH::Gateway.new(@host, @user, :port => @port, :compression => false )
+		rescue Errno::EHOSTUNREACH, Errno::ECONNREFUSED, Net::SSH::AuthenticationFailed, SocketError => exception
+			STDERR.puts "#{exception.class}: #{exception.message}"
+			if exception.class == Net::SSH::AuthenticationFailed
+				puts "Password - is shown as you type! - (RETURN for skipping the host): "
+				password = STDIN.readline.chomp.strip
+				retry if password.length>0
+			end
+			return false
 		end
+		
 		return @gateway
 	end
 
@@ -371,9 +382,11 @@ class GWHosts
 		end
 
 		# ... and connect to it
-		ssh_gateway.connect
-
-		return ssh_gateway
+		if ssh_gateway.connect
+			return ssh_gateway
+		else
+			return false
+		end
 	end
 	
 	# {{{ handle a single host }}}
@@ -508,10 +521,12 @@ class GWHosts
 				gwhost.each do| gateway, hostlist |
 					puts "Gateway: #{gateway}, Level #{level + 1}"
 					
-					ssh_gateway = handle_gateway( gateway, ssh_gateway )
-					
-					# Call ourselves recursively for handling nested gateways
-					handle_gwhost( hostlist, level + 1, leave, ssh_gateway)
+					if ssh_gateway = handle_gateway( gateway, ssh_gateway )
+						# Call ourselves recursively for handling nested gateways
+						handle_gwhost( hostlist, level + 1, leave, ssh_gateway)
+					else
+						puts "ERROR: Connecting to gateway #{gateway} failed! Skipped."
+					end
 				end
 			else
 				if handle_host( gwhost, ssh_gateway ) == LEAVE
