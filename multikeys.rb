@@ -389,6 +389,8 @@ class GWHosts
 		@interactive = args['interactive']
 		@action = args['action']
 		@keys = args['keys']
+
+		@cmd = args['cmd']
 	end
 	
 	def handle_gateway( gateway, betweengateway = nil )
@@ -522,11 +524,22 @@ class GWHosts
 				puts "SSH'ing to #{host_data[:host]}..."
 				system("ssh #{host_data[:user]}@#{host_data[:host]} -p#{host_data[:port]}")
 			end
+		when "cmd"
+			if gateway
+				gateway.gateway.open( host_data[:host], host_data[:port]) do | port |
+					puts "WARNING: No host key checking for hosts behind a gateway!"
+					puts "SSH'ing to #{host_data[:host]} via gateway #{gateway.host}..."
+					system("ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null #{host_data[:user]}@localhost -p #{port} #{@cmd}")
+				end
+			else
+				puts "SSH'ing to #{host_data[:host]}..."
+				system("ssh #{host_data[:user]}@#{host_data[:host]} -p#{host_data[:port]} #{@cmd}")
+			end
 		else
 			# Should not be reachable
 			raise( OptionParser::ParseError, "Unsupported action." )
 		end
-				
+
 		# Disconnect from the host
 		ssh_host.disconnect if ssh_host
 	end
@@ -610,6 +623,7 @@ opts = OptionParser.new do | opt |
 end
 
 # Parse arguments
+cmd = nil
 
 begin
 	opts.parse!( ARGV )
@@ -621,14 +635,18 @@ begin
 		} ]
 	end
 
-	action = ARGV[0] || raise( "Need an action in order to do something." )
+	action = ARGV[0] || raise( OptionParser::ParseError, "Need an action in order to do something." )
 	
-	raise OptionParser::ParseError, ( "Unsupported action." ) if not ( action == "add" or action == "remove" or action == "addremove" or action == "list" or action == "ssh" or action == "hostname" )
+	raise OptionParser::ParseError, ( "Unsupported action." ) if not ( action == "add" or action == "remove" or action == "addremove" or action == "list" or action == "ssh" or action == "cmd" or action == "hostname" )
 	
 	raise OptionParser::ParseError, ( "Need a keyfile." ) if keys == nil and not ( action == "list" )
 
+	if action == "cmd" or action == "command"
+		cmd = ARGV[1] || raise( OptionParser::ParseError, "Need a command to execute with action #{action}." )
+	end
+
 	# handle gateways and hosts recursively
-	gwhosts = GWHosts.new( gwhostlist, 'interactive' =>interactive, 'action' => action, 'keys' => keys )
+	gwhosts = GWHosts.new( gwhostlist, 'interactive' =>interactive, 'action' => action, 'keys' => keys, 'cmd' => cmd )
 
 	# Do the magic
 	gwhosts.loop
@@ -641,7 +659,8 @@ rescue OptionParser::ParseError => exc
 	puts "\nSupported actions:"
 	puts "add:       Add or update key(s). Replaces a key if base64 matches,"
 	puts "           but description or arguments differ."
-	puts "addremove: Add keys, then remove keys with \"-\" before filename"
+	puts "addremove: Add keys, then remove keys with \"-\" before filename."
+	puts "cmd <cmd>: Exectute command <cmd>."
 	puts "hostname:  Show hostzname."
 	puts "list:      List authorized keys."
 	puts "remove:    Remove key(s)."
