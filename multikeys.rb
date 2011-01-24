@@ -243,7 +243,7 @@ class SSHGateway
 end
 
 class SSHHost
-	# Net::SSH instance of the SSH server if connected
+	# Net::SSH instance of the SSH server if connectedssh_gateway
 	attr_reader :ssh
 	
 	# Takes a hash with host, port, user as returned from connection_info
@@ -259,8 +259,8 @@ class SSHHost
 	def connect( password = nil )
 		begin
 			if @gateway
-				puts "Connecting to host #{@host} via gateway..."
-				@ssh = @gateway.ssh(@host, @user, { :port => @port,  :compression => false, :password => password } )
+				puts "Connecting to host #{@host} via gateway #{@gateway.host}..."
+				@ssh = @gateway.gateway.ssh(@host, @user, { :port => @port,  :compression => false, :password => password } )
 			else
 				puts "Connecting to host #{@host}..."
 				@ssh = Net::SSH.start(@host, @user,  { :port => @port, :compression => false, :password => password } )
@@ -449,7 +449,7 @@ class GWHosts
 		if @action != "ssh"
 			# Initialize a new SSH host...
 			if gateway
-				ssh_host = SSHHost.new( host_data, gateway.gateway )
+				ssh_host = SSHHost.new( host_data, gateway )
 			else
 				ssh_host = SSHHost.new( host_data )
 			end
@@ -534,7 +534,7 @@ class GWHosts
 	# {{{ handle_gw_host recursively
 	# level is for tracking recursion level
 	# leave is for leaving recursion before it finished
-	def handle_gwhost( gwhosts, level = 0, leave = false, ssh_gateway = nil )
+	def handle_gwhost( gwhosts, level = 0, leave = false, usegateway = nil )
 		return true if leave
 
 		gwhosts.each do | gwhost |
@@ -542,15 +542,15 @@ class GWHosts
 				gwhost.each do| gateway, hostlist |
 					puts "Gateway: #{gateway}, Level #{level + 1}"
 					
-					if ssh_gateway = handle_gateway( gateway, ssh_gateway )
+					if usegateway  = handle_gateway( gateway, usegateway )
 						# Call ourselves recursively for handling nested gateways
-						handle_gwhost( hostlist, level + 1, leave, ssh_gateway)
+						handle_gwhost( hostlist, level + 1, leave, usegateway)
 					else
 						puts "ERROR: Connecting to gateway #{gateway} failed! Skipped."
 					end
 				end
 			else
-				rc = handle_host( gwhost, ssh_gateway )
+				rc = handle_host( gwhost, usegateway )
 				case rc
 				when LEAVE
 					leave = true
