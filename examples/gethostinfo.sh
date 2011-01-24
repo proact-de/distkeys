@@ -11,5 +11,5 @@ echo -n "Kernel:   " ; uname -a
 
 if [ -f /etc/debian_version ]; then
 	echo -e "\nSome installed software:"
-	COLUMNS=80 dpkg -l | egrep "( apache2 | dansguardian | openvpn | postfix | squid|nagios)" | cut -c 1-30
+	dpkg -l | egrep "( apache2 | dansguardian | openvpn | postfix | squid|nagios)" | cut -c 1-50
 fi
