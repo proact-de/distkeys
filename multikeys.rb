@@ -391,6 +391,7 @@ class GWHosts
 		@keys = args['keys']
 
 		@cmd = args['cmd']
+		@script = args['script']
 	end
 	
 	def handle_gateway( gateway, betweengateway = nil )
@@ -409,6 +410,20 @@ class GWHosts
 			return ssh_gateway
 		else
 			return false
+		end
+	end
+	
+	# {{{ start interactive ssh session
+	def start_ssh_session( host_data, gateway, cmd = nil )
+		if gateway
+			gateway.gateway.open( host_data[:host], host_data[:port]) do | port |
+				puts "WARNING: No host key checking for hosts behind a gateway!"
+				puts "SSH'ing to #{host_data[:host]} via gateway #{gateway.host}..."
+				system("ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null #{host_data[:user]}@localhost -p #{port} #{cmd}")
+			end
+		else
+			puts "SSH'ing to #{host_data[:host]}..."
+			system("ssh #{host_data[:user]}@#{host_data[:host]} -p#{host_data[:port]} #{cmd}")
 		end
 	end
 	
@@ -514,26 +529,31 @@ class GWHosts
 			# Commit the changes
 			authkeys.commit
 		when "ssh"
-			if gateway
-				gateway.gateway.open( host_data[:host], host_data[:port]) do | port |
-					puts "WARNING: No host key checking for hosts behind a gateway!"
-					puts "SSH'ing to #{host_data[:host]} via gateway #{gateway.host}..."
-					system("ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null #{host_data[:user]}@localhost -p #{port}")
-				end
-			else
-				puts "SSH'ing to #{host_data[:host]}..."
-				system("ssh #{host_data[:user]}@#{host_data[:host]} -p#{host_data[:port]}")
-			end
+			start_ssh_session( host_data, gateway )
 		when "cmd"
-			if gateway
-				gateway.gateway.open( host_data[:host], host_data[:port]) do | port |
-					puts "WARNING: No host key checking for hosts behind a gateway!"
-					puts "SSH'ing to #{host_data[:host]} via gateway #{gateway.host}..."
-					system("ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null #{host_data[:user]}@localhost -p #{port} #{@cmd}")
-				end
-			else
-				puts "SSH'ing to #{host_data[:host]}..."
-				system("ssh #{host_data[:user]}@#{host_data[:host]} -p#{host_data[:port]} #{@cmd}")
+			start_ssh_session( host_data, gateway, @cmd )
+		when "script"
+			# Start SFTP session
+			puts "Uploading script #{@script}..."
+			@sftp = Net::SFTP::Session.new(ssh)
+			@sftp.loop { @sftp.opening? }
+
+			remote = "/tmp/multikeys-script-action-#{File.basename(@script) + "-" + Time.now.strftime( "%Y-%M-%d" ) + "-" + rand(1000000).to_s}"
+
+			begin
+				@sftp.upload!( @script, remote  )
+			rescue RuntimeError => exception
+				puts	exception.message
+				puts "ERROR: Can't upload #{script}. Skipping..."
+			end
+			@sftp.loop
+
+			request = @sftp.setstat( remote, :permissions => 0500 )
+			request.wait
+			if request.response.ok?
+				puts "Executing script..."
+				start_ssh_session( host_data, gateway, remote )
+				@sftp.remove!( remote )
 			end
 		else
 			# Should not be reachable
@@ -624,6 +644,7 @@ end
 
 # Parse arguments
 cmd = nil
+script = nil
 
 begin
 	opts.parse!( ARGV )
@@ -637,16 +658,20 @@ begin
 
 	action = ARGV[0] || raise( OptionParser::ParseError, "Need an action in order to do something." )
 	
-	raise OptionParser::ParseError, ( "Unsupported action." ) if not ( action == "add" or action == "remove" or action == "addremove" or action == "list" or action == "ssh" or action == "cmd" or action == "hostname" )
+	raise OptionParser::ParseError, ( "Unsupported action." ) if not ( action == "add" or action == "remove" or action == "addremove" or action == "list" or action == "ssh" or action == "cmd" or action == "script" or action == "hostname" )
 	
 	raise OptionParser::ParseError, ( "Need a keyfile." ) if keys == nil and not ( action == "list" )
 
-	if action == "cmd" or action == "command"
+	if action == "cmd"
 		cmd = ARGV[1] || raise( OptionParser::ParseError, "Need a command to execute with action #{action}." )
 	end
 
+	if action == "script"
+		script = ARGV[1] || raise( OptionParser::ParseError, "Need a script to execute with action #{action}." )
+	end
+
 	# handle gateways and hosts recursively
-	gwhosts = GWHosts.new( gwhostlist, 'interactive' =>interactive, 'action' => action, 'keys' => keys, 'cmd' => cmd )
+	gwhosts = GWHosts.new( gwhostlist, 'interactive' =>interactive, 'action' => action, 'keys' => keys, 'cmd' => cmd, 'script' => script )
 
 	# Do the magic
 	gwhosts.loop
@@ -657,14 +682,15 @@ rescue OptionParser::ParseError => exc
 	STDERR.puts exc.message
   STDERR.puts opts.to_s
 	puts "\nSupported actions:"
-	puts "add:       Add or update key(s). Replaces a key if base64 matches,"
-	puts "           but description or arguments differ."
-	puts "addremove: Add keys, then remove keys with \"-\" before filename."
-	puts "cmd <cmd>: Exectute command <cmd>."
-	puts "hostname:  Show hostzname."
-	puts "list:      List authorized keys."
-	puts "remove:    Remove key(s)."
-	puts "ssh:       Start interactive SSH session."
+	puts "add:             Add or update key(s). Replaces a key if base64 matches,"
+	puts "                 but description or arguments differ."
+	puts "addremove:       Add keys, then remove keys with \"-\" before filename."
+	puts "cmd <cmd>:       Exectute command <cmd>."
+	puts "hostname:        Show hostzname."
+	puts "list:            List authorized keys."
+	puts "remove:          Remove key(s)."
+	puts "script <script>: Upload <script> to server and execute it."
+	puts "ssh:             Start interactive SSH session."
   exit 1
 # }}}
 end
