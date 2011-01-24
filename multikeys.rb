@@ -650,10 +650,12 @@ begin
 	opts.parse!( ARGV )
 	
 	# Transform gateway and host in our data structure for the loop
-	if host
+	if host and gateway
 		gwhostlist = [ {
 			gateway => [ host ]
 		} ]
+	elsif host
+		gwhostlist = [ host ]
 	end
 
 	action = ARGV[0] || raise( OptionParser::ParseError, "Need an action in order to do something." )
