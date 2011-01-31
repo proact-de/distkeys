@@ -20,7 +20,7 @@ if [ -f /etc/debian_version ]; then
 
 		if dpkg -l $software > /dev/null 2>&1; then
 			echo "Package information for $software:"
-			LANG=C apt-cache policy $software | grep -E '^ ( Installed| Candidate|\*\*\*)'
+			LANG=C apt-cache policy $software | grep -E '^ ( Installed| Candidate|\*\*\*)' 2> /dev/null
 			echo -n "Running processes: " ; pidof $proc
 		fi
 	done
