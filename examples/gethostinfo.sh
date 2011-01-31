@@ -18,8 +18,10 @@ if [ -f /etc/debian_version ]; then
 
 		if test $proc = postfix; then proc=master; fi
 
-		echo "Package information for $software:"
-		LANG=C apt-cache policy $software | grep -E '^ ( Installed| Candidate|\*\*\*)'
-		echo -n "Running processes: " ; pidof $proc
+		if dpkg -l $software > /dev/null 2>&1; then
+			echo "Package information for $software:"
+			LANG=C apt-cache policy $software | grep -E '^ ( Installed| Candidate|\*\*\*)'
+			echo -n "Running processes: " ; pidof $proc
+		fi
 	done
 fi
