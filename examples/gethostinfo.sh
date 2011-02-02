@@ -12,7 +12,6 @@ echo -n "Uptime:   " ; uptime
 
 if [ -f /etc/debian_version ]; then
 	echo -e "\nSome installed software:"
-	dpkg -l | egrep "( squid|nagios)" | cut -c 1-50
 	for software in apache2 dansguardian openvpn postfix squid squid3 nagios2 nagios3; do
 		proc=$software
 
