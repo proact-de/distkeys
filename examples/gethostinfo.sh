@@ -17,10 +17,16 @@ if [ -f /etc/debian_version ]; then
 
 		if test $proc = postfix; then proc=master; fi
 
-		if dpkg -l $software > /dev/null 2>&1; then
+		OUT=$( LANG=C apt-cache policy $software )
+
+		if ! (echo "$OUT" | grep -q "Installed.*none" ) ; then
 			echo "Package information for $software:"
-			LANG=C apt-cache policy $software | grep -E '^ ( Installed| Candidate|\*\*\*)' 2> /dev/null
-			echo -n "Running processes: " ; pidof $proc
+			echo "$OUT" | grep -E '^ ( Installed| Candidate|\*\*\*)' 2> /dev/null
+			if pidof $proc >/dev/null; then
+				echo -n "Running processes: " ; pidof $proc
+			else
+				echo "Not running."
+			fi
 		fi
 	done
 fi
