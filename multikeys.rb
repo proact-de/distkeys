@@ -217,12 +217,12 @@ class SSHGateway
 	def connect()
 		begin
 			if @betweengw
-				puts "Connecting to gateway #{@host} behind #{@betweengw.host}."
+				puts "Connecting to gateway (user: #{@user}, port: #{@port}) #{@host} behind #{@betweengw.host}."
 				if @betweengwport = @betweengw.gateway.open( @host, @port )
 					@gateway = Net::SSH::Gateway.new( "localhost", @user, :port => @betweengwport, :compression => false )
 				end
 			else
-				puts "Connecting to gateway #{@host}..."
+				puts "Connecting to gateway #{@host} (user: #{@user}, port: #{@port})..."
 				@gateway = Net::SSH::Gateway.new(@host, @user, :port => @port, :compression => false )
 			end
 		rescue Errno::EHOSTUNREACH, Errno::ECONNREFUSED, Net::SSH::AuthenticationFailed, SocketError => exception
@@ -266,10 +266,10 @@ class SSHHost
 	def connect( password = nil )
 		begin
 			if @gateway
-				puts "Connecting to host #{@host} via gateway #{@gateway.host}..."
+				puts "Connecting to host #{@host} (user: #{@user}, port: #{@port}) via gateway #{@gateway.host}..."
 				@ssh = @gateway.gateway.ssh(@host, @user, { :port => @port,  :compression => false, :password => password } )
 			else
-				puts "Connecting to host #{@host}..."
+				puts "Connecting to host #{@host} (user: #{@user}, port: #{@port})..."
 				@ssh = Net::SSH.start(@host, @user,  { :port => @port, :compression => false, :password => password } )
 			end
 		rescue Errno::EHOSTUNREACH, Errno::ECONNREFUSED, Net::SSH::AuthenticationFailed, SocketError => exception
@@ -430,11 +430,11 @@ class GWHosts
 		if gateway
 			gateway.gateway.open( host_data[:host], host_data[:port]) do | port |
 				puts "WARNING: No host key checking for hosts behind a gateway!"
-				puts "SSH'ing to #{host_data[:host]} via gateway #{gateway.host}..."
+				puts "SSH'ing to #{host_data[:host]} (user: #{host_data[:user]}, port: #{port}) via gateway #{gateway.host}..."
 				system("ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null #{host_data[:user]}@localhost -p #{port} #{cmd}")
 			end
 		else
-			puts "SSH'ing to #{host_data[:host]}..."
+			puts "SSH'ing to #{host_data[:host]}) (user: #{host_data[:user]}, port: #{host_data[:port]})..."
 			system("ssh #{host_data[:user]}@#{host_data[:host]} -p#{host_data[:port]} #{cmd}")
 		end
 	end
