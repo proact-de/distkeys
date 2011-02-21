@@ -10,6 +10,7 @@ Multikeys is a ruby script which requires:
 - Net::SSH v2, debian package libnet-ssh2-ruby
 - Net::SSH::Gateway, debian package libnet-ssh-gateway-ruby
 - Net::SFTP v2, debian package libnet-sftp2-ruby
+- Termios, debian package libtermios-ruby
 
 
 ===== Known Issues =====

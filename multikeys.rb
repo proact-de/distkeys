@@ -6,6 +6,8 @@ require 'net/sftp'
 
 require 'optparse'
 
+require 'termios'
+
 class SSHAuthKeys
 	# Authorized Keys
 	attr_reader :authkeys
@@ -226,8 +228,13 @@ class SSHGateway
 		rescue Errno::EHOSTUNREACH, Errno::ECONNREFUSED, Net::SSH::AuthenticationFailed, SocketError => exception
 			STDERR.puts "#{exception.class}: #{exception.message}"
 			if exception.class == Net::SSH::AuthenticationFailed
-				puts "Password - is shown as you type! - (RETURN for skipping the host): "
+				t = Termios.tcgetattr(STDIN)
+				old = t
+				t.lflag &= ~Termios::ECHO
+				Termios.tcsetattr(STDIN, Termios::TCSANOW, t)
+				print "Password - (RETURN for skipping the host): "
 				password = STDIN.readline.chomp.strip
+				Termios.tcsetattr(STDIN, Termios::TCSANOW, old)
 				retry if password.length>0
 			end
 			return false
@@ -268,8 +275,13 @@ class SSHHost
 		rescue Errno::EHOSTUNREACH, Errno::ECONNREFUSED, Net::SSH::AuthenticationFailed, SocketError => exception
 			STDERR.puts "#{exception.class}: #{exception.message}"
 			if exception.class == Net::SSH::AuthenticationFailed
-				puts "Password - is shown as you type! - (RETURN for skipping the host): "
+				t = Termios.tcgetattr(STDIN)
+				old = t
+				t.lflag &= ~Termios::ECHO
+				Termios.tcsetattr(STDIN, Termios::TCSANOW, t)
+				print "Password - (RETURN for skipping the host): "
 				password = STDIN.readline.chomp.strip
+				Termios.tcsetattr(STDIN, Termios::TCSANOW, old)
 				retry if password.length>0
 			end
 			return false
