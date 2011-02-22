@@ -15,7 +15,7 @@ Multikeys is a ruby script which requires:
 
 ===== Known Issues =====
 
-There is an error in Net::SFTP v2 prior to 2.0.5 which needs to be added manualy:
+There is an error in Net::SFTP v2 prior to 2.0.5 which needs to be added manually:
 
 If you get:
 
@@ -27,7 +27,7 @@ require 'stringio'
 
 to the top of the session.rb file mentioned in the exception message.
 
-See here for further information about this error:
+For further information about this error, see:
 
 http://toblog.bryans.org/2010/08/19/ruby-net-sftp-uninitialized-constant
 
