@@ -677,6 +677,10 @@ script = nil
 
 begin
 	opts.parse!( ARGV )
+
+	if gwhostlist and (host or gateway)
+		raise OptionParser::ParseError, ( "Ambiguous options: do not specify -h and -G/-H." )
+	end
 	
 	# Transform gateway and host in our data structure for the loop
 	if host and gateway
