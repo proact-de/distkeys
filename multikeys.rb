@@ -205,7 +205,9 @@ class SSHGateway
 	attr_reader :host, :port, :user
 	
 	# Takes a hash with host, port, user as returned from connection_info
-	def initialize( hostdata, betweengateway = nil )
+	def initialize( ssh_config, hostdata, betweengateway = nil )
+		@ssh_config = ssh_config
+
 		@host = hostdata[:host]
 		@port = hostdata[:port]
 		@user = hostdata[:user]
@@ -219,11 +221,11 @@ class SSHGateway
 			if @betweengw
 				puts "Connecting to gateway (user: #{@user}, port: #{@port}) #{@host} behind #{@betweengw.host}."
 				if @betweengwport = @betweengw.gateway.open( @host, @port )
-					@gateway = Net::SSH::Gateway.new( "localhost", @user, :port => @betweengwport, :compression => false )
+					@gateway = Net::SSH::Gateway.new( "localhost", @user, :port => @betweengwport, :compression => false, :config => @ssh_config )
 				end
 			else
 				puts "Connecting to gateway #{@host} (user: #{@user}, port: #{@port})..."
-				@gateway = Net::SSH::Gateway.new(@host, @user, :port => @port, :compression => false )
+				@gateway = Net::SSH::Gateway.new(@host, @user, :port => @port, :compression => false, :config => @ssh_config )
 			end
 		rescue Errno::EHOSTUNREACH, Errno::ECONNREFUSED, Net::SSH::AuthenticationFailed, SocketError => exception
 			STDERR.puts "#{exception.class}: #{exception.message}"
@@ -254,7 +256,9 @@ class SSHHost
 	attr_reader :ssh
 	
 	# Takes a hash with host, port, user as returned from connection_info
-	def initialize( hostdata, gateway = nil )
+	def initialize( ssh_config, hostdata, gateway = nil )
+		@ssh_config = ssh_config
+
 		@host = hostdata[:host]
 		@port = hostdata[:port]
 		@user = hostdata[:user]
@@ -267,10 +271,10 @@ class SSHHost
 		begin
 			if @gateway
 				puts "Connecting to host #{@host} (user: #{@user}, port: #{@port}) via gateway #{@gateway.host}..."
-				@ssh = @gateway.gateway.ssh(@host, @user, { :port => @port,  :compression => false, :password => password } )
+				@ssh = @gateway.gateway.ssh(@host, @user, { :port => @port,  :compression => false, :password => password, :config => @ssh_config } )
 			else
 				puts "Connecting to host #{@host} (user: #{@user}, port: #{@port})..."
-				@ssh = Net::SSH.start(@host, @user,  { :port => @port, :compression => false, :password => password } )
+				@ssh = Net::SSH.start(@host, @user,  { :port => @port, :compression => false, :password => password, :config => @ssh_config } )
 			end
 		rescue Errno::EHOSTUNREACH, Errno::ECONNREFUSED, Net::SSH::AuthenticationFailed, SocketError => exception
 			STDERR.puts "#{exception.class}: #{exception.message}"
@@ -398,6 +402,8 @@ class GWHosts
 	def initialize( gwhosts, args )
 		@gwhosts = gwhosts
 
+		@ssh_config = args['ssh_config']
+
 		@interactive = args['interactive']
 		@action = args['action']
 		@keys = args['keys']
@@ -412,9 +418,9 @@ class GWHosts
 		# Initialize a new gateway...
 		ssh_gateway = nil
 		if betweengateway
-			ssh_gateway = SSHGateway.new( gateway_data, betweengateway )
+			ssh_gateway = SSHGateway.new( @ssh_config, gateway_data, betweengateway )
 		else
-			ssh_gateway = SSHGateway.new( gateway_data )
+			ssh_gateway = SSHGateway.new( @ssh_config, gateway_data )
 		end
 
 		# ... and connect to it
@@ -427,15 +433,21 @@ class GWHosts
 	
 	# {{{ start interactive ssh session
 	def start_ssh_session( host_data, gateway, cmd = nil )
+		ssh_config_opt = case @ssh_config
+			when true then ""
+			when false, nil then ""
+			else "-F #{@ssh_config}"
+			end
+
 		if gateway
 			gateway.gateway.open( host_data[:host], host_data[:port]) do | port |
 				puts "WARNING: No host key checking for hosts behind a gateway!"
 				puts "SSH'ing to #{host_data[:host]} (user: #{host_data[:user]}, port: #{port}) via gateway #{gateway.host}..."
-				system("ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null #{host_data[:user]}@localhost -p #{port} #{cmd}")
+				system("ssh #{ssh_config_opt} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null #{host_data[:user]}@localhost -p #{port} #{cmd}")
 			end
 		else
 			puts "SSH'ing to #{host_data[:host]}) (user: #{host_data[:user]}, port: #{host_data[:port]})..."
-			system("ssh #{host_data[:user]}@#{host_data[:host]} -p#{host_data[:port]} #{cmd}")
+			system("ssh #{ssh_config_opt} #{host_data[:user]}@#{host_data[:host]} -p#{host_data[:port]} #{cmd}")
 		end
 	end
 	
@@ -478,9 +490,9 @@ class GWHosts
 		if @action != "ssh"
 			# Initialize a new SSH host...
 			if gateway
-				ssh_host = SSHHost.new( host_data, gateway )
+				ssh_host = SSHHost.new( @ssh_config, host_data, gateway )
 			else
-				ssh_host = SSHHost.new( host_data )
+				ssh_host = SSHHost.new( @ssh_config, host_data )
 			end
 
 			# ... and connect to it
@@ -616,6 +628,7 @@ class GWHosts
 end
 
 # Parse options
+ssh_config = true
 host = nil
 hostlist = nil
 keys = [ ]
@@ -626,6 +639,10 @@ interactive = false
 
 opts = OptionParser.new do | opt |
 	opt.banner = "Usage "+$0.to_s+" <optionen> <aktion>"
+
+	opt.on( "-F", "--configfile <file>", "Alternative SSH per-user configuration file." ) do | value |
+		ssh_config = value.to_s
+	end
 
 	opt.on( "-H", "--host <host>", "Host to connect to (Syntax: [user@]host[:port])." ) do | value |
 		host = value.to_s
@@ -685,7 +702,7 @@ begin
 	end
 
 	# handle gateways and hosts recursively
-	gwhosts = GWHosts.new( gwhostlist, 'interactive' =>interactive, 'action' => action, 'keys' => keys, 'cmd' => cmd, 'script' => script )
+	gwhosts = GWHosts.new( gwhostlist, 'ssh_config' => ssh_config, 'interactive' => interactive, 'action' => action, 'keys' => keys, 'cmd' => cmd, 'script' => script )
 
 	# Do the magic
 	gwhosts.loop
