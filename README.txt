@@ -13,6 +13,23 @@ Multikeys is a ruby script which requires:
 - Termios, debian package libtermios-ruby
 
 
+===== SSH Configuration =====
+
+Using the `-F' command line option, you may specify an alternative per-user SSH configuration file which will be used instead of the default `~/.ssh/config' (see ssh(1)'s `-F' command line option for details).
+
+For example, given the following `~/.ssh/multikeys.config':
+
+  Host *
+      ForwardAgent yes
+      Compression yes
+      StrictHostKeyChecking no
+      IdentityFile ~/.ssh/tmx_rsa
+
+Then, `multikeys.rb -F ~/.ssh/multikeys.config -h <hostlist> <action>' will cause multikeys to enable agent forwarding and compression, disable strict host key checking and using ~/.ssh/tmx_rsa as SSH identity file.
+
+See the ssh_config(5) manpage for details about available configuration options.
+
+
 ===== Known Issues =====
 
 There is an error in Net::SFTP v2 prior to 2.0.5 which needs to be added manually:
