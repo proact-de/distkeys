@@ -2,8 +2,13 @@
 
 echo "===== HOST INFORMATION ====="
 echo -n "Hostname: "
-# 'echo $( ... )' translates newlines into spaces
-echo $( hostname -f; echo '--'; hostname -A; echo "("; hostname -I; echo ")" )
+if hostname -A > /dev/null 2>&1 && hostname -I > /dev/null 2>&1; then
+	# 'echo $( ... )' translates newlines into spaces
+	echo $( hostname -f; echo '--'; hostname -A; \
+		echo "("; hostname -I; echo ")" )
+else
+	hostname -f
+fi
 
 test -f /etc/debian_version \
 	&& ( echo -n "Debian:   "; cat /etc/debian_version )
