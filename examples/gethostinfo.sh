@@ -55,6 +55,30 @@ if [ -f /etc/debian_version ]; then
 					echo "    '$proc' not running."
 				fi
 			done
+
+			case "$software" in
+				mysql-server*)
+					repl_conf_opts='bind.address|server.id|log.bin|binlog|report.host|relay.log'
+					repl_conf="$( grep -E '^[[:space:]]*('"$repl_conf_opts"')' \
+						/etc/mysql/my.cnf )"
+					if [ -n "$repl_conf" ]; then
+						echo "    MySQL Replication Setup:"
+						echo "$repl_conf" | while read line; do
+							echo "     > $line"
+						done
+						if test -n "$( pidof mysqld )"; then
+							echo "    MySQL Replication Status:"
+							mysql --defaults-file=/etc/mysql/debian.cnf \
+									-e 'SHOW MASTER STATUS;' \
+									-e 'SHOW SLAVE STATUS;' \
+							| while read line; do
+								echo "     > $line"
+							done
+						fi
+					fi
+					;;
+			esac
 		fi
 	done
 fi
+
