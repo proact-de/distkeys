@@ -638,7 +638,7 @@ gwhostlist = nil
 interactive = false
 
 opts = OptionParser.new do | opt |
-	opt.banner = "Usage "+$0.to_s+" <optionen> <aktion>"
+	opt.banner = "Usage "+$0.to_s+" <optionen> <action>"
 
 	opt.on( "-F", "--configfile <file>", "Alternative SSH per-user configuration file." ) do | value |
 		ssh_config = value.to_s
