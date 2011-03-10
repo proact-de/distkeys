@@ -1,5 +1,8 @@
 #! /bin/bash
 
+export LANG=C
+export LC_ALL=C
+
 echo "===== HOST INFORMATION ====="
 echo -n "Hostname: "
 if hostname -A > /dev/null 2>&1 && hostname -I > /dev/null 2>&1; then
