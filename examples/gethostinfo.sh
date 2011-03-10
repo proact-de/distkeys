@@ -33,7 +33,7 @@ function get_debian_info() {
 	echo -e "\nSome installed software:"
 	for software in apache2 dansguardian openvpn postfix squid squid3 \
 			nagios2 nagios3 mysql-server mysql-server-4.1 mysql-server-5.0 \
-			mysql-server-5.1; do
+			mysql-server-5.1 util-vserver; do
 		procs=$software
 
 		case "$procs" in
@@ -42,6 +42,9 @@ function get_debian_info() {
 				;;
 			mysql-server*)
 				procs="mysqld_safe mysqld ndbd ndb_mgmd"
+				;;
+			util-vserver)
+				procs=""
 				;;
 		esac
 
