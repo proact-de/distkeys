@@ -87,8 +87,8 @@ function get_debian_info() {
 							echo "    MySQL Replication Status:"
 							$chroot_cmd mysql \
 									--defaults-file=/etc/mysql/debian.cnf -t \
-									-e 'SHOW MASTER STATUS;' \
-									-e 'SHOW SLAVE STATUS;' \
+									-e 'SHOW MASTER STATUS\G' \
+									-e 'SHOW SLAVE STATUS\G' \
 							| while read line; do
 								echo "     > $line"
 							done
