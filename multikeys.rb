@@ -579,6 +579,21 @@ class GWHosts
 				start_ssh_session( host_data, gateway, remote )
 				@sftp.remove!( remote )
 			end
+		when "scp"
+			# XXX: somewhat hacky for now
+			tmp_dir_name = "/tmp/multikeys-upload-" + Time.now.strftime( "%Y-%M-%d" ) + "-" + rand(1000000).to_s
+			puts "Uploading file to file #{tmp_dir_name}..."
+
+			@sftp = Net::SFTP::Session.new(ssh)
+			@sftp.loop { @sftp.opening? }
+
+			begin
+				@sftp.upload!( @script, tmp_dir_name )
+			rescue RuntimeError => exception
+				puts	exception.message
+				puts "ERROR: Can't upload #{script}. Skipping..."
+			end
+			@sftp.loop
 		else
 			# Should not be reachable
 			raise( OptionParser::ParseError, "Unsupported action." )
@@ -693,7 +708,7 @@ begin
 
 	action = ARGV[0] || raise( OptionParser::ParseError, "Need an action in order to do something." )
 	
-	raise OptionParser::ParseError, ( "Unsupported action." ) if not ( action == "add" or action == "remove" or action == "addremove" or action == "list" or action == "ssh" or action == "cmd" or action == "script" or action == "hostname" )
+	raise OptionParser::ParseError, ( "Unsupported action." ) if not ( action == "add" or action == "remove" or action == "addremove" or action == "list" or action == "ssh" or action == "cmd" or action == "script" or action == "scp" or action == "hostname" )
 	
 	raise OptionParser::ParseError, ( "Need a keyfile." ) if keys == nil and not ( action == "list" )
 
@@ -701,8 +716,8 @@ begin
 		cmd = ARGV[1] || raise( OptionParser::ParseError, "Need a command to execute with action #{action}." )
 	end
 
-	if action == "script"
-		script = ARGV[1] || raise( OptionParser::ParseError, "Need a script to execute with action #{action}." )
+	if action == "script" or action == "scp"
+		script = ARGV[1] || raise( OptionParser::ParseError, "Need a filename with action #{action}." )
 	end
 
 	# handle gateways and hosts recursively
@@ -725,6 +740,7 @@ rescue OptionParser::ParseError => exc
 	puts "list:            List authorized keys."
 	puts "remove:          Remove key(s)."
 	puts "script <script>: Upload <script> to server and execute it."
+	puts "scp <file>:      Upload <file> to the server."
 	puts "ssh:             Start interactive SSH session."
   exit 1
 # }}}
