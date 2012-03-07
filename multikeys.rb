@@ -51,7 +51,13 @@ class SSHAuthKeys
 	def list()
 		@authkeys.each do | line |
 			if line.index('ssh-')
-				puts line.match(/ssh-[^ ]+\s+[A-Za-z0-9=+\/]+ (.*$)/)[1]
+				matches = line.match(/ssh-[^ ]+\s+[A-Za-z0-9=+\/]+ (.*$)/)
+				if matches
+					puts matches[1]
+				else
+					puts "WARNING: Key without comment!"
+					puts line
+				end
 			end
 		end
 	end
