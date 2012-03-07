@@ -576,7 +576,7 @@ class GWHosts
 				@sftp.upload!( @script, remote  )
 			rescue RuntimeError => exception
 				puts	exception.message
-				puts "ERROR: Can't upload #{script}. Skipping..."
+				puts "ERROR: Can't upload #{@script}. Skipping..."
 			end
 			@sftp.loop
 
