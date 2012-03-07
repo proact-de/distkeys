@@ -742,7 +742,7 @@ rescue OptionParser::ParseError => exc
 	puts "                 but description or arguments differ."
 	puts "addremove:       Add keys, then remove keys with \"-\" before filename."
 	puts "cmd <cmd>:       Exectute command <cmd>."
-	puts "hostname:        Show hostzname."
+	puts "hostname:        Show hostname."
 	puts "list:            List authorized keys."
 	puts "remove:          Remove key(s)."
 	puts "script <script>: Upload <script> to server and execute it."
