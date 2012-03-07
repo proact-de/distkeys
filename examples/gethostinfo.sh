@@ -5,12 +5,20 @@ export LC_ALL=C
 
 echo "===== HOST INFORMATION ====="
 echo -n "Hostname: "
+HOSTNAME=$(hostname -f 2>&1)
+if [ $? -ne 0 ]; then
+	HOSTNAME="$(hostname) (hostname -f failed with $HOSTNAME)"
+fi
+if echo $HOSTNAME | grep -q "localhost" ; then
+	HOSTNAME="$(hostname) (FQDN in /etc/hosts configured as localhost)"
+fi
+
 if hostname -A > /dev/null 2>&1 && hostname -I > /dev/null 2>&1; then
 	# 'echo $( ... )' translates newlines into spaces
-	echo $( hostname -f; echo '--'; hostname -A; \
-		echo "("; hostname -I; echo ")" )
+	echo $HOSTNAME $( echo '--'; hostname -A; \
+		          echo "("; hostname -I; echo ")" )
 else
-	hostname -f
+	echo $HOSTNAME
 fi
 
 test -f /etc/debian_version \
