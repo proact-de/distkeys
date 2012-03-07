@@ -36,7 +36,7 @@ class SSHAuthKeys
 		@sftp.loop { @sftp.opening? }
 		
 		begin
-			@authkeys_flat = @sftp.download!( authkeyfile )
+			@authkeys_flat = @sftp.download!( authkeyfile, nil, :via => :scp )
 		rescue RuntimeError => exception
 			puts	exception.message
 			puts "ERROR: Can't open authorized_keys"
@@ -573,7 +573,7 @@ class GWHosts
 			remote = "/tmp/multikeys-script-action-#{File.basename(@script) + "-" + Time.now.strftime( "%Y-%M-%d" ) + "-" + rand(1000000).to_s}"
 
 			begin
-				@sftp.upload!( @script, remote  )
+				@sftp.upload!( @script, remote, :via => :scp )
 			rescue RuntimeError => exception
 				puts	exception.message
 				puts "ERROR: Can't upload #{@script}. Skipping..."
@@ -596,7 +596,7 @@ class GWHosts
 			@sftp.loop { @sftp.opening? }
 
 			begin
-				@sftp.upload!( @script, tmp_dir_name )
+				@sftp.upload!( @script, tmp_dir_name, :via => :scp )
 			rescue RuntimeError => exception
 				puts	exception.message
 				puts "ERROR: Can't upload #{script}. Skipping..."
