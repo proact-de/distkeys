@@ -47,7 +47,7 @@ class SSHAuthKeys
 		@sftp.loop
 	end
 
-	# List keys via ssh-keygen -lf
+	# List keys
 	def list()
 		@authkeys.each do | line |
 			if line.index('ssh-')
