@@ -513,6 +513,8 @@ class GWHosts
 			authkeys.list
 		when "hostname"
 			puts ssh.exec!("hostname")
+		when "hostkeys"
+			puts ssh.exec!("ls /etc/ssh/*key | xargs -n1 ssh-keygen -lf") 
 		when "add"
 			authkeys = SSHAuthKeys.new( ssh )
 			@keys.each do | key |
@@ -714,7 +716,7 @@ begin
 
 	action = ARGV[0] || raise( OptionParser::ParseError, "Need an action in order to do something." )
 	
-	raise OptionParser::ParseError, ( "Unsupported action." ) if not ( action == "add" or action == "remove" or action == "addremove" or action == "list" or action == "ssh" or action == "cmd" or action == "script" or action == "scp" or action == "hostname" )
+	raise OptionParser::ParseError, ( "Unsupported action." ) if not ( action == "add" or action == "remove" or action == "addremove" or action == "list" or action == "ssh" or action == "cmd" or action == "script" or action == "scp" or action == "hostname" or action == "hostkeys")
 	
 	raise OptionParser::ParseError, ( "Need a keyfile." ) if keys == nil and not ( action == "list" )
 
@@ -743,6 +745,7 @@ rescue OptionParser::ParseError => exc
 	puts "addremove:       Add keys, then remove keys with \"-\" before filename."
 	puts "cmd <cmd>:       Exectute command <cmd>."
 	puts "hostname:        Show hostname."
+	puts "hostkeys:        Show hostkeys."
 	puts "list:            List authorized keys."
 	puts "remove:          Remove key(s)."
 	puts "script <script>: Upload <script> to server and execute it."
