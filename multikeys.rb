@@ -735,7 +735,11 @@ begin
 	gwhosts = GWHosts.new( gwhostlist, 'ssh_config' => ssh_config, 'interactive' => interactive, 'action' => action, 'keys' => keys, 'cmd' => cmd, 'script' => script )
 
 	# Do the magic
-	gwhosts.loop
+	begin
+		gwhosts.loop
+	rescue Interrupt
+		STDERR.puts "\nAborted due to user interrupt."
+	end
 
 # {{{ error handling
 rescue OptionParser::ParseError => exc
