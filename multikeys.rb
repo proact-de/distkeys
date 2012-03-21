@@ -624,12 +624,16 @@ class GWHosts
 				gwhost.each do| gateway, hostlist |
 					puts "Gateway: #{gateway}, Level #{level + 1}"
 					
-					if usegateway  = handle_gateway( gateway, usegateway )
+					if usegateway = handle_gateway( gateway, usegateway )
 						# Call ourselves recursively for handling nested gateways
 						handle_gwhost( hostlist, level + 1, leave, usegateway)
 					else
 						puts "ERROR: Connecting to gateway #{gateway} failed! Skipped."
 					end
+
+					# Do not use the gateway anymore after handling all the hosts in the hash of it
+					puts "Finished with hosts behind gateway #{gateway}.\n"
+					usegateway = nil
 				end
 			else
 				rc = handle_host( gwhost, usegateway )
