@@ -462,9 +462,9 @@ class GWHosts
 	# {{{ handle a single host }}}
 	def handle_host( host, gateway = nil )
 		if gateway
-			puts "Host: #{host} via #{gateway.host}"
+			puts "\nHost: #{host} via #{gateway.host}"
 		else
-			puts "Host: #{host}"
+			puts "\nHost: #{host}"
 		end
 		
 		# {{{ interactive mode
@@ -632,7 +632,7 @@ class GWHosts
 					end
 
 					# Do not use the gateway anymore after handling all the hosts in the hash of it
-					puts "Finished with hosts behind gateway #{gateway}.\n"
+					puts "\nFinished with hosts behind gateway #{gateway}.\n"
 					usegateway = nil
 				end
 			else
