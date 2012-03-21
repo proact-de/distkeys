@@ -440,7 +440,7 @@ class GWHosts
 	end
 	
 	# {{{ start interactive ssh session
-	def start_ssh_session( host_data, gateway, cmd = nil )
+	def start_ssh_session( host_data, gateway, cmd = nil, markers = false)
 		ssh_config_opt = case @ssh_config
 			when true then ""
 			when false, nil then ""
@@ -451,11 +451,23 @@ class GWHosts
 			gateway.gateway.open( host_data[:host], host_data[:port]) do | port |
 				puts "WARNING: No host key checking for hosts behind a gateway!"
 				puts "SSH'ing to #{host_data[:host]} (user: #{host_data[:user]}, port: #{port}) via gateway #{gateway.host}..."
+				if markers
+					puts "\n<<<<< START OF OUTPUT"
+				end
 				system("ssh #{ssh_config_opt} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null #{host_data[:user]}@localhost -p #{port} #{cmd}")
+				if markers
+					puts ">>>>> END OF OUTPUT\n"
+				end
 			end
 		else
 			puts "SSH'ing to #{host_data[:host]} (user: #{host_data[:user]}, port: #{host_data[:port]})..."
+			if markers 
+				puts "\n<<<<< START OF OUTPUT"
+			end
 			system("ssh #{ssh_config_opt} #{host_data[:user]}@#{host_data[:host]} -p#{host_data[:port]} #{cmd}")
+			if markers
+				puts ">>>>> END OF OUTPUT\n\n"
+			end
 		end
 	end
 	
@@ -565,7 +577,7 @@ class GWHosts
 		when "ssh"
 			start_ssh_session( host_data, gateway )
 		when "cmd"
-			start_ssh_session( host_data, gateway, @cmd )
+			start_ssh_session( host_data, gateway, @cmd, true )
 		when "script"
 			# Start SFTP session
 			puts "Uploading script #{@script}..."
@@ -586,7 +598,7 @@ class GWHosts
 			request.wait
 			if request.response.ok?
 				puts "Executing script..."
-				start_ssh_session( host_data, gateway, remote )
+				start_ssh_session( host_data, gateway, remote, true )
 				@sftp.remove!( remote )
 			end
 		when "scp"
