@@ -704,7 +704,7 @@ begin
 	opts.parse!( ARGV )
 
 	if gwhostlist and (host or gateway)
-		raise OptionParser::ParseError, ( "Ambiguous options: do not specify -h and -G/-H." )
+		raise OptionParser::ParseError, ( "Ambiguous options: do not specify -g/-h and -G/-H." )
 	end
 	
 	# Transform gateway and host in our data structure for the loop
