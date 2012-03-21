@@ -454,7 +454,7 @@ class GWHosts
 				system("ssh #{ssh_config_opt} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null #{host_data[:user]}@localhost -p #{port} #{cmd}")
 			end
 		else
-			puts "SSH'ing to #{host_data[:host]}) (user: #{host_data[:user]}, port: #{host_data[:port]})..."
+			puts "SSH'ing to #{host_data[:host]} (user: #{host_data[:user]}, port: #{host_data[:port]})..."
 			system("ssh #{ssh_config_opt} #{host_data[:user]}@#{host_data[:host]} -p#{host_data[:port]} #{cmd}")
 		end
 	end
