@@ -283,7 +283,6 @@ class SSHHost
 				@ssh = Net::SSH.start(@host, @user,  { :port => @port, :compression => false, :password => password, :config => @ssh_config } )
 			end
 		rescue Errno::ETIMEDOUT, Errno::EHOSTUNREACH, Errno::ECONNREFUSED, Net::SSH::AuthenticationFailed, Net::SSH::Disconnect, SocketError => exception
-			p exception
 			STDERR.puts "#{exception.class}: #{exception.message}"
 			if exception.class == Net::SSH::AuthenticationFailed
 				t = Termios.tcgetattr(STDIN)
