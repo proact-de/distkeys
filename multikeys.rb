@@ -288,11 +288,13 @@ class SSHHost
 			if exception.class == Net::SSH::AuthenticationFailed
 				t = Termios.tcgetattr(STDIN)
 				old = t
+				# Silence echoing of the password the user enters
 				t.lflag &= ~Termios::ECHO
 				Termios.tcsetattr(STDIN, Termios::TCSANOW, t)
 				print "Password - (RETURN for skipping the host): "
 				password = STDIN.readline.chomp.strip
 				Termios.tcsetattr(STDIN, Termios::TCSANOW, old)
+				# Try to authenticate again if the user has given a password
 				retry if password.length>0
 			end
 			return false
