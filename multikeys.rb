@@ -644,7 +644,7 @@ class GWHosts
 					end
 
 					# Do not use the gateway anymore after handling all the hosts in the hash of it
-					puts "\nFinished with hosts behind gateway #{gateway}.\n"
+					puts "\nFinished with hosts behind gateway #{gateway}.\n\n"
 					usegateway = nil
 				end
 			else
