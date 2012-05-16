@@ -43,7 +43,7 @@ class SSHAuthKeys
 			puts "Assuming that no keys are stored on the server"
 		end
 
-		@authkeys = @authkeys_flat.split
+		@authkeys = @authkeys_flat.split("\n")
 		@sftp.loop
 	end
 
@@ -65,8 +65,9 @@ class SSHAuthKeys
 	# {{{ Add a key file
 	# Replaces it, if the base64 matches, but arguments or comment are different
 	def addkeyfile( keyfile )
-		if File.exists?( keyfile )
-			key = File.new( keyfile, "r" ).to_a
+		if File::exists?( keyfile )
+			# strip tailing "\n" as @authkey_flat.split("\n") has no tailing "\n" either
+			key = File::new( keyfile, "r" ).read.chomp
 
 			# Add keys in the file
 			key.each do | line |
