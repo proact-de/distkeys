@@ -133,7 +133,7 @@ class SSHAuthKeys
 					if index = @authkeys.to_s.index(base64)
 						# Make sure to delete all instances of it
 						@authkeys.each do | line |
-							if line.index(base64)
+							if line.index(/#\s{base64}\s/)
 								@authkeys.delete( line )
 								@changed = true
 								puts "Key #{comment} removed."
