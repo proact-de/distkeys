@@ -43,7 +43,7 @@ class SSHAuthKeys
 			puts "Assuming that no keys are stored on the server"
 		end
 
-		@authkeys = @authkeys_flat.to_a
+		@authkeys = @authkeys_flat.split
 		@sftp.loop
 	end
 
