@@ -67,10 +67,12 @@ class SSHAuthKeys
 	def addkeyfile( keyfile )
 		if File::exists?( keyfile )
 			# strip tailing "\n" as @authkey_flat.split("\n") has no tailing "\n" either
-			key = File::new( keyfile, "r" ).read.chomp
+			key = File::new( keyfile, "r" ).to_a
 
 			# Add keys in the file
 			key.each do | line |
+				# strip tailing "\n" as @authkey_flat.split("\n") has no tailing "\n" either
+				line = line.chomp
 				# Is this a key?
 				if line.index("ssh-")
 					# Extract base64 from key
