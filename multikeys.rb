@@ -130,10 +130,10 @@ class SSHAuthKeys
 					base64 = matchdata[1]
 					comment = matchdata[2]
 					# Key there?
-					if index = @authkeys.to_s.index(base64)
+					if @authkeys.to_s.index(" "+base64+" ")
 						# Make sure to delete all instances of it
 						@authkeys.each do | line |
-							if line.index(/#\s{base64}\s/)
+							if line.index(" "+base64+" ")
 								@authkeys.delete( line )
 								@changed = true
 								puts "Key #{comment} removed."
@@ -577,7 +577,7 @@ class GWHosts
 		when "addremove"
 			authkeys = SSHAuthKeys.new( ssh )
 			# add or remove depending on + or - sign
-			@keys.each do | key | 
+			@keys.each do | key |
 				# [0] should return a substring according to the String class documentation,
 				# but it returns a FixNum with the ASCII code instead. [0..0] works
 				# as expected
