@@ -88,7 +88,8 @@ class SSHAuthKeys
 					base64 = matchdata[1]
 					comment = matchdata[2]
 					# Key already there?
-					if index = @authkeys.index{ | str | str.include?( base64 ) }
+					# Expect a space before and after the base64 block
+					if index = @authkeys.index{ | str | str.include?( " " + base64 + " " ) }
 						if @authkeys[ index ] == line
 							puts "Key #{comment} already there and identical. Skipped adding it."
 						else
@@ -130,9 +131,13 @@ class SSHAuthKeys
 					base64 = matchdata[1]
 					comment = matchdata[2]
 					# Key there?
+					# Expect a space before and after the base64 block
+					# to avoid delete a complete key while removing a truncated,
+					# incomplete key.
 					if @authkeys.to_s.index(" "+base64+" ")
 						# Make sure to delete all instances of it
 						@authkeys.each do | line |
+							# Expect a space before and after the base64 block
 							if line.index(" "+base64+" ")
 								@authkeys.delete( line )
 								@changed = true
