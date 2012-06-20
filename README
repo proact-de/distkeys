@@ -7,10 +7,14 @@ Furthermore it executes a command or a script on a list of servers.
 Multikeys is a ruby script which requires:
 
 - Ruby ;)
-- Net::SSH v2, debian package libnet-ssh2-ruby
-- Net::SSH::Gateway, debian package libnet-ssh-gateway-ruby
-- Net::SFTP v2, debian package libnet-sftp2-ruby
-- Termios, debian package libtermios-ruby
+- Net::SSH v2, debian package ruby-net-ssh
+  (Squeeze and older: libnet-ssh2-ruby)
+- Net::SSH::Gateway, debian package ruby-net-ssh-gateway
+  (Squeeze and older: libnet-ssh-gateway-ruby)
+- Net::SFTP v2, debian package ruby-net-sftp
+  (Squeeze and older: libnet-sftp2-ruby)
+- Termios, debian package ruby-termios
+  (Squeeze and older: libtermios-ruby)
 - SCP
 
 Multikeys can also use SFTP, when you remove the occurences of :via => :scp. This is not configurable via option yet.
