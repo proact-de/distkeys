@@ -37,13 +37,14 @@ class SSHAuthKeys
 		
 		begin
 			@authkeys_flat = @sftp.download!( authkeyfile, nil, :via => :scp )
+
+			@authkeys = @authkeys_flat.split("\n")
 		rescue RuntimeError => exception
 			puts	exception.message
 			puts "ERROR: Can't open authorized_keys"
 			puts "Assuming that no keys are stored on the server"
 		end
 
-		@authkeys = @authkeys_flat.split("\n")
 		@sftp.loop
 	end
 
