@@ -163,6 +163,15 @@ class SSHAuthKeys
 			return true
 		end
 		
+		# Try to create ~/.ssh if it does not already exist
+		@sftp.lstat( ".ssh" ) do | response |
+			if not response.ok?
+				puts "~/.ssh does not seem to exist, creating it with 700..."
+				@ssh.exec!( "mkdir ~/.ssh" )
+				@ssh.exec!( "chmod 700 ~/.ssh" )
+			end
+		end
+		
 		# Create a backup
 		backupfile = "#{@authkeyfile}-#{ Time.now.strftime("%Y-%m-%d") }.bak"
 		# With -n only if we didn't do one today already
@@ -185,15 +194,6 @@ class SSHAuthKeys
 			puts "ERROR: Can't open authorized_keys for writing! Skipped."
 		end
 
-		# Try to create ~/.ssh if it does not already exist
-		@sftp.lstat( ".ssh" ) do | response |
-			if not response.ok?
-				puts "~/.ssh does not seem to exist, creating it with 700..."
-				@ssh.exec!( "mkdir ~/.ssh" )
-				@ssh.exec!( "chmod 700 ~/.ssh" )
-			end
-		end
-
 		request = @sftp.lstat(newauthkeyfile) do | response |
 			if response.ok?
 				# File size okay?
@@ -207,7 +207,7 @@ class SSHAuthKeys
 				end
 			end
 		end
-		@sftp.loop
+		#@sftp.loop
 	end
 
 end
