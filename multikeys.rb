@@ -194,7 +194,7 @@ class SSHAuthKeys
 			puts "ERROR: Can't open authorized_keys for writing! Skipped."
 		end
 
-		request = @sftp.lstat(newauthkeyfile) do | response |
+		request = @sftp.lstat!(newauthkeyfile) do | response |
 			if response.ok?
 				# File size okay?
 				if response[:attrs].size >= wantedsize
