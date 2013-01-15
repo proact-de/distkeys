@@ -1,6 +1,7 @@
 ====== Distkeys ======
 
-Distkeys distributes a list of SSH public keys to a list of servers. It reaches servers behind a firewall as well.
+Distkeys distributes a list of SSH public keys to a list of servers. It
+reaches servers behind a firewall as well.
 
 Furthermore it executes a command or a script on a list of servers.
 
@@ -17,14 +18,17 @@ Distkeys is a ruby script which requires:
   (Squeeze and older: libtermios-ruby)
 - SCP
 
-Distkeys can also use SFTP, when you remove the occurences of :via => :scp. This is not configurable via option yet.
+Distkeys can also use SFTP, when you remove the occurences of
+":via => :scp". This is not configurable via option yet.
 
 
 ===== SSH Configuration =====
 
-Using the `-F' command line option, you may specify an alternative per-user SSH configuration file which will be used instead of the default `~/.ssh/config' (see ssh(1)'s `-F' command line option for details).
+Using the `-F' command line option, you may specify an alternative
+per-user SSH configuration file which will be used instead of the default
+"~/.ssh/config" (see ssh(1)'s `-F' command line option for details).
 
-For example, given the following `~/.ssh/multikeys.config':
+For example, given the following "~/.ssh/multikeys.config":
 
   Host *
       ForwardAgent yes
@@ -32,16 +36,20 @@ For example, given the following `~/.ssh/multikeys.config':
       StrictHostKeyChecking no
       IdentityFile ~/.ssh/tmx_rsa
 
-Then, `multikeys.rb -F ~/.ssh/multikeys.config -h <hostlist> <action>' will cause multikeys to enable agent forwarding and compression, disable strict host key checking and using ~/.ssh/tmx_rsa as SSH identity file.
+Then, "multikeys.rb -F ~/.ssh/multikeys.config -h <hostlist> <action>"
+will cause multikeys to enable agent forwarding and compression, disable
+strict host key checking and using ~/.ssh/tmx_rsa as SSH identity file.
 
-See the ssh_config(5) manpage for details about available configuration options.
+See the ssh_config(5) manpage for details about available configuration
+options.
 
 
 ===== Known Issues =====
 
 ==== Can't add new key into hash with Ruby 1.9.3 and ruby-net-ssh 1:2.2.1-1 ====
 
-With Ruby 1.9.3 and Ruby Net SSH 2.2.1 the following error message appears on uploading keys:
+With Ruby 1.9.3 and Ruby Net SSH 2.2.1 the following error message
+appears on uploading keys:
 
 Creating a backup to .ssh/authorized_keys-2012-05-16.bak if not already done today...
 Uploading keys to .ssh/authorized_keys-new...
@@ -80,7 +88,8 @@ ruby1.8 multikeys.rb …
 
 ==== Uninitialized contant Net::SFTP::Session:StringIO in Net::STFP v2 < 2.0.5 ====
 
-There is an error in Net::SFTP v2 prior to 2.0.5 which needs to be added manually:
+There is an error in Net::SFTP v2 prior to 2.0.5 which needs to be added
+manually:
 
 If you get:
 
@@ -95,4 +104,3 @@ to the top of the session.rb file mentioned in the exception message.
 For further information about this error, see:
 
 http://toblog.bryans.org/2010/08/19/ruby-net-sftp-uninitialized-constant
-
