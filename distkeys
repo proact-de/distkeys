@@ -702,7 +702,19 @@ gwhostlist = nil
 interactive = false
 
 opts = OptionParser.new do | opt |
-	opt.banner = "Usage "+$0.to_s+" <options> <action>"
+	opt.banner = "Usage: " + $0.to_s + " <options> <action>\n
+Supported actions:
+add:             Add or update key(s). Replaces a key if base64 matches,
+                 but description or arguments differ.
+addremove:       Add keys, then remove keys with \"-\" before filename.
+cmd <cmd>:       Exectute command <cmd>
+hostname:        Show hostname.
+hostkeys:        Show hostkeys.
+list:            List authorized keys.
+remove:          Remove key(s).
+script <script>: Upload <script> to server and execute it.
+scp <file>:      Upload <file> to the server.
+ssh:             Start interactive SSH session.\n\n"
 
 	opt.on( "-F", "--configfile <file>", "Alternative SSH per-user configuration file." ) do | value |
 		ssh_config = value.to_s
@@ -784,18 +796,6 @@ rescue OptionParser::ParseError => exc
 	# raise
 	STDERR.puts exc.message
   STDERR.puts opts.to_s
-	puts "\nSupported actions:"
-	puts "add:             Add or update key(s). Replaces a key if base64 matches,"
-	puts "                 but description or arguments differ."
-	puts "addremove:       Add keys, then remove keys with \"-\" before filename."
-	puts "cmd <cmd>:       Exectute command <cmd>."
-	puts "hostname:        Show hostname."
-	puts "hostkeys:        Show hostkeys."
-	puts "list:            List authorized keys."
-	puts "remove:          Remove key(s)."
-	puts "script <script>: Upload <script> to server and execute it."
-	puts "scp <file>:      Upload <file> to the server."
-	puts "ssh:             Start interactive SSH session."
   exit 1
 # }}}
 end
