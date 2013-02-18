@@ -192,6 +192,7 @@ class SSHAuthKeys
 		rescue Net::SFTP::StatusException => exception
 			puts	exception.message
 			puts "ERROR: Can't open authorized_keys for writing! Skipped."
+			return
 		end
 
 		request = @sftp.lstat!(newauthkeyfile) do | response |
