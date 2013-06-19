@@ -6,20 +6,39 @@ distkeys \- manual page for distkeys 1.0
 .B distkeys
 \fI<options> <action>\fR
 .SH DESCRIPTION
-Supported actions:
-add:             Add or update key(s). Replaces a key if base64 matches,
-.IP
-but description or arguments differ.
-.PP
-addremove:       Add keys, then remove keys with "\-" before filename.
-cmd <cmd>:       Exectute command <cmd>
-hostname:        Show hostname.
-hostkeys:        Show hostkeys.
-list:            List authorized keys.
-remove:          Remove key(s).
-script <script>: Upload <script> to server and execute it.
-scp <file>:      Upload <file> to the server.
-ssh:             Start interactive SSH session.
+.SH ACTIONS
+Supported actions are:
+.TP
+\fBadd\fR
+Add or update key(s). Replaces a key if base64 matches, but description or arguments differ.
+.TP
+\fBaddremove\fR
+Add keys, then remove keys with "\-" before filename.
+.TP
+\fBcmd\fR \fI<cmd>\fR
+Exectute command <cmd>
+.TP
+\fBhostname\fR
+Show hostname.
+.TP
+\fBhostkeys\fR
+List hostkeys.
+.TP
+\fBlist\fR
+List authorized keys.
+.TP
+\fBremove\fR
+Remove key(s).
+.TP
+\fBscript\fR \fI<script>\fR
+Upload <script> to server and execute it.
+.TP
+\fBscp\fR \fI<file>\fR
+Upload <file> to the server.
+.TP
+\fBssh\fR
+Start interactive SSH session.
+.SH OPTIONS
 .TP
 \fB\-V\fR, \fB\-\-version\fR
 Show version of distkeys.
@@ -44,15 +63,3 @@ Gateway to access the host via port forwarding.
 .TP
 \fB\-i\fR, \fB\-\-interactive\fR
 Ask before each operation on a host.
-.SH "SEE ALSO"
-The full documentation for
-.B distkeys
-is maintained as a Texinfo manual.  If the
-.B info
-and
-.B distkeys
-programs are properly installed at your site, the command
-.IP
-.B info distkeys
-.PP
-should give you access to the complete manual.
