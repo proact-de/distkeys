@@ -10,7 +10,7 @@ Vcs-Browser: https://www.teamix.org/projects/distkeys/repository
 
 Package: distkeys
 Architecture: all
-Depends: ruby1.8, ruby-net-ssh, ruby-net-ssh-gateway, ruby-net-sftp, ruby-termios
+Depends: ${misc:Depends}, ruby1.8, ruby-net-ssh, ruby-net-ssh-gateway, ruby-net-sftp, ruby-termios
 Description: SSH key distribution
  Distkeys distributes a list of SSH public keys to a list of servers. It
  reaches servers behind a firewall as well. Furthermore it can also
