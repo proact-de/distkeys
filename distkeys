@@ -712,7 +712,7 @@ add:             Add or update key(s). Replaces a key if base64 matches,
 addremove:       Add keys, then remove keys with \"-\" before filename.
 cmd <cmd>:       Exectute command <cmd>
 hostname:        Show hostname.
-hostkeys:        Show hostkeys.
+hostkeys:        List hostkeys.
 list:            List authorized keys.
 remove:          Remove key(s).
 script <script>: Upload <script> to server and execute it.
