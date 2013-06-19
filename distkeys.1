@@ -6,6 +6,13 @@ distkeys \- distribute SSH keys to a list of servers
 .B distkeys
 \fI<options> <action>\fR
 .SH DESCRIPTION
+Distkeys distributes a list of SSH public keys to a list of servers. It
+reaches servers behind a firewall as well. Furthermore it can also
+execute a command or a script on a list of servers and can also list
+host or authentication keys.
+
+With an action you tell distkeys what to do. An option modifies the way
+distkeys executes the action.
 .SH ACTIONS
 Supported actions are:
 .TP
