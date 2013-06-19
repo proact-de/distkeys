@@ -1,0 +1,10 @@
+Document: distkeys
+Title: distkeys README
+Author: Martin Steigerwald, Sebastian Harl, Robin Kara
+Abstract: This README describes what distkeys is,
+ its usage and its dependencies.
+Section: System/Administration
+
+Format: text
+Files: /usr/share/doc/distkeys/README.gz
+
