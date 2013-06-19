@@ -8,6 +8,8 @@ require 'optparse'
 
 require 'termios'
 
+VERSION = "1.0"
+
 class SSHAuthKeys
 	# Authorized Keys
 	attr_reader :authkeys
@@ -716,6 +718,11 @@ remove:          Remove key(s).
 script <script>: Upload <script> to server and execute it.
 scp <file>:      Upload <file> to the server.
 ssh:             Start interactive SSH session.\n\n"
+
+	opt.on("-V", "--version", "Show version of distkeys.") do
+		puts VERSION
+		exit 0
+	end
 
 	opt.on( "-F", "--configfile <file>", "Alternative SSH per-user configuration file." ) do | value |
 		ssh_config = value.to_s
