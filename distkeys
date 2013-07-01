@@ -203,9 +203,13 @@ class SSHAuthKeys
 				if response[:attrs].size >= wantedsize
 					puts "File does exist and has correct size, moving to #{@authkeyfile}..."
 					# Move the new keyfile over the old one
-					# Overwrite existing file should work with flag: 0x0001,
-					# even atomically with 0x0002, but doesn't yet with openssh
-					#@sftp.remove!( @authkeyfile )
+					# OpenSSH does not yet allow overwriting with flag: 0x0001,
+					# or flag: 0x0002 using SFTP protocol version 5, it does support
+					# a vendor extension to protocol version 3 ("posix-rename@openssh.com")
+					# but this does not seem to be supported in ruby-net-ssh, see:
+					# does not seem to support sftp protocol version 5 rename flag for overwriting files
+					# https://bugzilla.mindrot.org/show_bug.cgi?id=2123
+					@sftp.remove!( @authkeyfile )
 					@sftp.rename!( newauthkeyfile, @authkeyfile, 0x0001 )
 
 					# We saved the changes, so no unsaved changes anymore
