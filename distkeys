@@ -207,7 +207,9 @@ class SSHAuthKeys
 					# or flag: 0x0002 using SFTP protocol version 5, it does support
 					# a vendor extension to protocol version 3 ("posix-rename@openssh.com")
 					# but this does not seem to be supported in ruby-net-ssh, see:
-					# does not seem to support sftp protocol version 5 rename flag for overwriting files
+					# does not seem to support sftp protocol version 5 rename flag for overwriting files.
+					# So accept a possibly dangerous race condition for now, by deleting
+					# first and then rename.
 					# https://bugzilla.mindrot.org/show_bug.cgi?id=2123
 					@sftp.remove!( @authkeyfile )
 					@sftp.rename!( newauthkeyfile, @authkeyfile, 0x0001 )
