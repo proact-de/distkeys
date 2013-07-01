@@ -211,7 +211,15 @@ class SSHAuthKeys
 					# So accept a possibly dangerous race condition for now, by deleting
 					# first and then rename.
 					# https://bugzilla.mindrot.org/show_bug.cgi?id=2123
-					@sftp.remove!( @authkeyfile )
+					begin
+						@sftp.remove!( @authkeyfile )
+					rescue Net::SFTP::StatusException => exception
+						# Any other error than file does not exist?
+						if exception.code != 2
+							puts	exception.message
+							puts "ERROR: Can't remove #{ @authkeyfile }"
+						end
+					end
 					@sftp.rename!( newauthkeyfile, @authkeyfile, 0x0001 )
 
 					# We saved the changes, so no unsaved changes anymore
