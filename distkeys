@@ -67,7 +67,7 @@ class SSHAuthKeys
 
 	# {{{ Add a key file
 	# Replaces it, if the base64 matches, but arguments or comment are different
-	def addkeyfile( keyfile )
+	def addkeyfile( keyfile, verbose = false )
 		if File::exists?( keyfile )
 			# strip tailing "\n" as @authkey_flat.split("\n") has no tailing "\n" either
 			key = File::new( keyfile, "r" ).to_a
@@ -94,7 +94,9 @@ class SSHAuthKeys
 					# Expect a space before and after the base64 block
 					if index = @authkeys.index{ | str | str.include?( " " + base64 + " " ) }
 						if @authkeys[ index ] == line
-							puts "Key #{comment} already there and identical. Skipped adding it."
+							if verbose
+								puts "Key #{comment} already there and identical. Skipped adding it."
+							end
 						else
 							puts "Key #{comment} already there, with different arguments or description. Replacing it..."
 							@authkeys[ index ] = line
@@ -114,7 +116,7 @@ class SSHAuthKeys
 	end
 	# }}}
 	
-	def removekeyfile( keyfile )
+	def removekeyfile( keyfile, verbose = false )
 		if File.exists?( keyfile )
 			key = File.new( keyfile, "r" ).to_a
 			
@@ -147,7 +149,7 @@ class SSHAuthKeys
 								puts "Key #{comment} removed."
 							end
 						end
-					else
+					elsif verbose
 						puts "Key #{comment} is not there. Skipped removing it."
 					end # Key there?
 				end # Is this a key?
@@ -442,6 +444,7 @@ class GWHosts
 		@ssh_config = args['ssh_config']
 
 		@interactive = args['interactive']
+		@verbose = args['verbose']
 		@action = args['action']
 		@keys = args['keys']
 
@@ -582,7 +585,7 @@ class GWHosts
 				end
 			end
 			@keys.each do | key |
-				authkeys.addkeyfile( key )
+				authkeys.addkeyfile( key, @verbose )
 			end
 			# Commit the changes
 			authkeys.commit
@@ -596,7 +599,7 @@ class GWHosts
 				end
 			end
 			@keys.each do | key | 
-				authkeys.removekeyfile( key )
+				authkeys.removekeyfile( key, @verbose )
 			end
 			# Commit the changes
 			authkeys.commit
@@ -608,11 +611,11 @@ class GWHosts
 				# but it returns a FixNum with the ASCII code instead. [0..0] works
 				# as expected
 				if key[0..0] == '-'
-					authkeys.removekeyfile( key[1..-1] )
+					authkeys.removekeyfile( key[1..-1], @verbose )
 				elsif key[0..0] == '+'
-					authkeys.addkeyfile( key[1..-1] )
+					authkeys.addkeyfile( key[1..-1] , @verbose )
 				else # if no + or - then add it as well
-					authkeys.addkeyfile( key )
+					authkeys.addkeyfile( key, @verbose )
 				end
 			end
 			# Commit the changes
@@ -720,6 +723,7 @@ keyfile = nil
 gateway = nil
 gwhostlist = nil
 interactive = false
+verbose = false
 
 opts = OptionParser.new do | opt |
 	opt.banner = "Usage: " + $0.to_s + " <options> <action>\n
@@ -770,6 +774,10 @@ ssh:             Start interactive SSH session.\n\n"
 	opt.on( "-i", "--interactive", "Ask before each operation on a host." ) do
 		interactive = true
 	end
+	
+	opt.on("-v", "--verbose", "Also show keys that have not been changed.") do
+		verbose = true
+	end
 end
 
 # Parse arguments
@@ -807,7 +815,7 @@ begin
 	end
 
 	# handle gateways and hosts recursively
-	gwhosts = GWHosts.new( gwhostlist, 'ssh_config' => ssh_config, 'interactive' => interactive, 'action' => action, 'keys' => keys, 'cmd' => cmd, 'script' => script )
+	gwhosts = GWHosts.new( gwhostlist, 'ssh_config' => ssh_config, 'interactive' => interactive, 'verbose' => verbose, 'action' => action, 'keys' => keys, 'cmd' => cmd, 'script' => script )
 
 	# Do the magic
 	begin
