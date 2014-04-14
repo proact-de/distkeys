@@ -93,11 +93,11 @@ manually:
 
 If you get:
 
-/usr/[...]/lib/net/sftp/session.rb:123:in `download!': uninitialized constant Net::SFTP::Session::StringIO (NameError) 
+	/usr/[...]/lib/net/sftp/session.rb:123:in `download!': uninitialized constant Net::SFTP::Session::StringIO (NameError) 
 
 add
 
-require 'stringio'
+	require 'stringio'
 
 to the top of the session.rb file mentioned in the exception message.
 
