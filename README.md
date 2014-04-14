@@ -42,23 +42,23 @@ git-buildpackage. It has the following branches:
 SSH Configuration
 -----------------
 
-Using the `-F' command line option, you may specify an alternative
+Using the `-F` command line option, you may specify an alternative
 per-user SSH configuration file which will be used instead of the default
-"~/.ssh/config" (see ssh(1)'s `-F' command line option for details).
+`~/.ssh/config` (see `ssh(1)`'s `-F` command line option for details).
 
-For example, given the following "~/.ssh/multikeys.config":
+For example, given the following `~/.ssh/multikeys.config`:
 
-  Host *
-      ForwardAgent yes
-      Compression yes
-      StrictHostKeyChecking no
-      IdentityFile ~/.ssh/tmx_rsa
+	Host *
+		ForwardAgent yes
+		Compression yes
+		StrictHostKeyChecking no
+		IdentityFile ~/.ssh/tmx_rsa
 
-Then, "multikeys.rb -F ~/.ssh/multikeys.config -h <hostlist> <action>"
+Then, `multikeys.rb -F ~/.ssh/multikeys.config -h <hostlist> <action>`
 will cause multikeys to enable agent forwarding and compression, disable
-strict host key checking and using ~/.ssh/tmx_rsa as SSH identity file.
+strict host key checking and using `~/.ssh/tmx_rsa` as SSH identity file.
 
-See the ssh_config(5) manpage for details about available configuration
+See the `ssh_config(5)` manpage for details about available configuration
 options.
 
 
