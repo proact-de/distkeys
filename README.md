@@ -36,7 +36,6 @@ git-buildpackage. It has the following branches:
 
 * master: This is were changes to the Debian packages go.
 * upstream: This is were upstream changes go.
-* pristine-tar: This would be for release tarballs if any.
 
 
 SSH Configuration
