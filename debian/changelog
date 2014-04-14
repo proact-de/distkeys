@@ -1,4 +1,4 @@
-distkeys (1.0-1) unstable; urgency=low
+distkeys (1.0-1) UNRELEASED; urgency=low
 
   * Initial Release.
   * Added work-around for bug #714606 by using SFTP for renaming
