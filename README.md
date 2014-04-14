@@ -1,5 +1,5 @@
-====== Distkeys ======
-
+Distkeys
+========
 Distkeys distributes a list of SSH public keys to a list of servers. It
 reaches servers behind a firewall as well.
 
@@ -7,22 +7,23 @@ Furthermore it executes a command or a script on a list of servers.
 
 Distkeys is a ruby script which requires:
 
-- Ruby ;)
-- Net::SSH v2, debian package ruby-net-ssh
+* Ruby ;)
+* Net::SSH v2, debian package ruby-net-ssh
   (Squeeze and older: libnet-ssh2-ruby)
-- Net::SSH::Gateway, debian package ruby-net-ssh-gateway
+* Net::SSH::Gateway, debian package ruby-net-ssh-gateway
   (Squeeze and older: libnet-ssh-gateway-ruby)
-- Net::SFTP v2, debian package ruby-net-sftp
+* Net::SFTP v2, debian package ruby-net-sftp
   (Squeeze and older: libnet-sftp2-ruby)
-- Termios, debian package ruby-termios
+* Termios, debian package ruby-termios
   (Squeeze and older: libtermios-ruby)
-- SCP
+* SCP
 
 Distkeys can also use SFTP, when you remove the occurences of
 ":via => :scp". This is not configurable via option yet.
 
 
-===== SSH Configuration =====
+SSH Configuration
+-----------------
 
 Using the `-F' command line option, you may specify an alternative
 per-user SSH configuration file which will be used instead of the default
@@ -44,10 +45,10 @@ See the ssh_config(5) manpage for details about available configuration
 options.
 
 
-===== Known Issues =====
+Known Issues
+------------
 
-==== Can't add new key into hash with Ruby 1.9.3 and ruby-net-ssh 1:2.2.1-1 ====
-
+### Can't add new key into hash with Ruby 1.9.3 and ruby-net-ssh 1:2.2.1-1
 With Ruby 1.9.3 and Ruby Net SSH 2.2.1 the following error message
 appears on uploading keys:
 
@@ -86,8 +87,7 @@ Workaround: Use Ruby 1.8 as
 ruby1.8 multikeys.rb …
 
 
-==== Uninitialized contant Net::SFTP::Session:StringIO in Net::STFP v2 < 2.0.5 ====
-
+### Uninitialized contant Net::SFTP::Session:StringIO in Net::STFP v2 < 2.0.5
 There is an error in Net::SFTP v2 prior to 2.0.5 which needs to be added
 manually:
 
@@ -104,3 +104,4 @@ to the top of the session.rb file mentioned in the exception message.
 For further information about this error, see:
 
 http://toblog.bryans.org/2010/08/19/ruby-net-sftp-uninitialized-constant
+
