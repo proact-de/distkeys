@@ -46,7 +46,7 @@ Using the `-F` command line option, you may specify an alternative
 per-user SSH configuration file which will be used instead of the default
 `~/.ssh/config` (see `ssh(1)`'s `-F` command line option for details).
 
-For example, given the following `~/.ssh/multikeys.config`:
+For example, given the following `~/.ssh/distkeys.config`:
 
 	Host *
 		ForwardAgent yes
@@ -54,8 +54,8 @@ For example, given the following `~/.ssh/multikeys.config`:
 		StrictHostKeyChecking no
 		IdentityFile ~/.ssh/tmx_rsa
 
-Then, `multikeys.rb -F ~/.ssh/multikeys.config -h <hostlist> <action>`
-will cause multikeys to enable agent forwarding and compression, disable
+Then, `distkeys -F ~/.ssh/distkeys.config -h <hostlist> <action>`
+will cause Distkeys to enable agent forwarding and compression, disable
 strict host key checking and using `~/.ssh/tmx_rsa` as SSH identity file.
 
 See the `ssh_config(5)` manpage for details about available configuration
@@ -101,7 +101,7 @@ appears on uploading keys:
 
 Workaround: Use Ruby 1.8 as
 
-	ruby1.8 multikeys.rb …
+	ruby1.8 distkeys …
 
 
 ### Uninitialized contant Net::SFTP::Session:StringIO in Net::STFP v2 < 2.0.5
