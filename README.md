@@ -22,6 +22,23 @@ Distkeys can also use SFTP, when you remove the occurences of
 ":via => :scp". This is not configurable via option yet.
 
 
+VCS
+===
+
+Distkeys is hosted at:
+
+https://www.teamix.org/projects/distkeys
+
+https://github.com/teamix/distkeys
+
+The git repository is prepared to handle debian package builds via
+git-buildpackage. It has the following branches:
+
+* master: This is were changes to the Debian packages go.
+* upstream: This is were upstream changes go.
+* pristine-tar: This would be for release tarballs if any.
+
+
 SSH Configuration
 -----------------
 
