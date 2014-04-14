@@ -3,7 +3,7 @@ Section: admin
 Priority: extra
 Maintainer: Martin Steigerwald <ms@teamix.de>
 Build-Depends: debhelper (>= 8.0.0)
-Standards-Version: 3.9.3
+Standards-Version: 3.9.5
 Homepage: https://www.teamix.org/projects/distkeys
 Vcs-Git: git://oss.teamix.org/distkeys.git
 Vcs-Browser: https://www.teamix.org/projects/distkeys/repository
