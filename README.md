@@ -53,6 +53,10 @@ A debian package can be built as follows:
 If you make changes in upstream branch remember to merge them into master
 branch before building the package.
 
+In case you want to build exactly the latest upstream version as noted in
+`debian/changelog` omit the option `--git-upstream-tree=branch`. This only
+works if there is a upstream tag with that version already.
+
 
 SSH Configuration
 -----------------
