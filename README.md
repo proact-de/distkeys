@@ -38,6 +38,22 @@ git-buildpackage. It has the following branches:
 * upstream: This is were upstream changes go.
 
 
+Debian package
+--------------
+
+A debian package can be built as follows:
+
+* Install git-buildpackage: 
+  `apt-get install git-buildpackage`
+* Clone the repository with `master` and `upstream` branch:
+  `gbp clone git@github.com:teamix/distkeys.git`
+* Build the package from the most recent version of the upstream branch:
+  `git-buildpackage --git-ignore-new --git-upstream-tree=branch -rfakeroot -uc -us`
+
+If you make changes in upstream branch remember to merge them into master
+branch before building the package.
+
+
 SSH Configuration
 -----------------
 
