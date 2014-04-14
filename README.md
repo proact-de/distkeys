@@ -23,7 +23,7 @@ Distkeys can also use SFTP, when you remove the occurences of
 
 
 VCS
-===
+---
 
 Distkeys is hosted at:
 
