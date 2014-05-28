@@ -70,6 +70,8 @@ Known Issues
 ------------
 
 ### Can't add new key into hash with Ruby 1.9.3 and ruby-net-ssh 1:2.2.1-1
+This issue is partly solved, but not in an ideal way so far.
+
 With Ruby 1.9.3 and Ruby Net SSH 2.2.1 the following error message
 appears on uploading keys:
 
