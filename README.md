@@ -139,5 +139,5 @@ to the top of the session.rb file mentioned in the exception message.
 
 For further information about this error, see:
 
-http://toblog.bryans.org/2010/08/19/ruby-net-sftp-uninitialized-constant
+[http://toblog.bryans.org/2010/08/19/ruby-net-sftp-uninitialized-constant](http://toblog.bryans.org/2010/08/19/ruby-net-sftp-uninitialized-constant)
 
