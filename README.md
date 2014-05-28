@@ -21,6 +21,10 @@ Distkeys is a ruby script which requires:
 Distkeys can also use SFTP, when you remove the occurences of
 ":via => :scp". This is not configurable via option yet.
 
+Read more in our blog (in german):
+
+[Distkeys als Open Source](http://blog.teamix.de/2013/10/06/distkeys-als-open-source/)
+
 
 VCS
 ===
