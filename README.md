@@ -21,9 +21,13 @@ Distkeys is a ruby script which requires:
 Distkeys can also use SFTP, when you remove the occurences of
 ":via => :scp". This is not configurable via option yet.
 
+Read more in our blog (in german):
+
+[Distkeys als Open Source](http://blog.teamix.de/2013/10/06/distkeys-als-open-source/)
+
 
 VCS
----
+===
 
 Distkeys is hosted at:
 
@@ -36,26 +40,7 @@ git-buildpackage. It has the following branches:
 
 * master: This is were changes to the Debian packages go.
 * upstream: This is were upstream changes go.
-
-
-Debian package
---------------
-
-A debian package can be built as follows:
-
-* Install git-buildpackage: 
-  `apt-get install git-buildpackage`
-* Clone the repository with `master` and `upstream` branch:
-  `gbp clone git@github.com:teamix/distkeys.git`
-* Build the package from the most recent version of the upstream branch:
-  `git-buildpackage --git-ignore-new --git-upstream-tree=branch -rfakeroot -uc -us`
-
-If you make changes in upstream branch remember to merge them into master
-branch before building the package.
-
-In case you want to build exactly the latest upstream version as noted in
-`debian/changelog` omit the option `--git-upstream-tree=branch`. This only
-works if there is a upstream tag with that version already.
+* pristine-tar: This would be for release tarballs if any.
 
 
 SSH Configuration
@@ -85,6 +70,8 @@ Known Issues
 ------------
 
 ### Can't add new key into hash with Ruby 1.9.3 and ruby-net-ssh 1:2.2.1-1
+This issue is partly solved, but not in an ideal way so far.
+
 With Ruby 1.9.3 and Ruby Net SSH 2.2.1 the following error message
 appears on uploading keys:
 
@@ -139,5 +126,5 @@ to the top of the session.rb file mentioned in the exception message.
 
 For further information about this error, see:
 
-[http://toblog.bryans.org/2010/08/19/ruby-net-sftp-uninitialized-constant](http://toblog.bryans.org/2010/08/19/ruby-net-sftp-uninitialized-constant)
+[ruby net-sftp uninitialized constant](http://toblog.bryans.org/2010/08/19/ruby-net-sftp-uninitialized-constant)
 
