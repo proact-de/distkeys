@@ -21,6 +21,10 @@ Distkeys is a ruby script which requires:
 Distkeys can also use SFTP, when you remove the occurences of
 ":via => :scp". This is not configurable via option yet.
 
+Read more in our blog (in german):
+
+[Distkeys als Open Source](http://blog.teamix.de/2013/10/06/distkeys-als-open-source/)
+
 
 VCS
 ===
@@ -66,6 +70,8 @@ Known Issues
 ------------
 
 ### Can't add new key into hash with Ruby 1.9.3 and ruby-net-ssh 1:2.2.1-1
+This issue is partly solved, but not in an ideal way so far.
+
 With Ruby 1.9.3 and Ruby Net SSH 2.2.1 the following error message
 appears on uploading keys:
 
@@ -120,5 +126,5 @@ to the top of the session.rb file mentioned in the exception message.
 
 For further information about this error, see:
 
-http://toblog.bryans.org/2010/08/19/ruby-net-sftp-uninitialized-constant
+[ruby net-sftp uninitialized constant](http://toblog.bryans.org/2010/08/19/ruby-net-sftp-uninitialized-constant)
 
