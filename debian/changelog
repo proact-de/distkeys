@@ -1,6 +1,6 @@
 distkeys (1.0-1) experimental; urgency=low
 
-  * Initial Release (Closes: #712787).
+  * Initial Release (Closes: #745478).
   * Added work-around for bug #714606 by using SFTP for renaming
     uploaded authorized_keys file to final location.
     This currently deletes the old file first, before renaming
