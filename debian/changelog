@@ -1,6 +1,6 @@
-distkeys (1.0-1) UNRELEASED; urgency=low
+distkeys (1.0-2) UNRELEASED; urgency=low
 
-  * Initial Release.
+  * Initial Release (Closes: #712787).
   * Added work-around for bug #714606 by using SFTP for renaming
     uploaded authorized_keys file to final location.
     This currently deletes the old file first, before renaming
@@ -8,4 +8,4 @@ distkeys (1.0-1) UNRELEASED; urgency=low
     https://bugzilla.mindrot.org/show_bug.cgi?id=2123
     https://github.com/net-ssh/net-sftp/issues/31
 
- -- Martin Steigerwald <ms@teamix.de>  Mon, 01 Jul 2013 13:41:34 +0200
+ -- Martin Steigerwald <ms@teamix.de>  Wed, 17 Sep 2014 10:15:32 +0200
