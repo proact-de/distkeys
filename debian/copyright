@@ -3,7 +3,7 @@ Upstream-Name: distkeys
 Source: https://github.com/teamix/distkeys
 
 Files: *
-Copyright: Copyright (C) 2006-2013 teamix GmbH
+Copyright: Copyright (C) 2006-2014 teamix GmbH
 	   Martin Steigerwald
 	   Sebastian Harl
 	   Robin Kara
@@ -11,8 +11,8 @@ Copyright: Copyright (C) 2006-2013 teamix GmbH
 License: GPL-2+
 
 Files: debian/*
-Copyright: 2013 Martin Steigerwald <ms@teamix.de>
-License: GPL-2+ and GPL-3+
+Copyright: 2013-2014 Martin Steigerwald <ms@teamix.de>
+License: GPL-3+
 
 License: GPL-2+
  This package is free software; you can redistribute it and/or modify
