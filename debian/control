@@ -5,8 +5,8 @@ Maintainer: Martin Steigerwald <ms@teamix.de>
 Build-Depends: debhelper (>= 9.0.0)
 Standards-Version: 3.9.6
 Homepage: https://github.com/teamix/distkeys
-Vcs-Git: https://github.com/teamix/atop-debian.git
-Vcs-Browser: https://github.com/teamix/atop-debian
+Vcs-Git: https://github.com/teamix/distkeys.git
+Vcs-Browser: https://github.com/teamix/distkeys
 
 Package: distkeys
 Architecture: all
