@@ -1,6 +1,6 @@
 Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: distkeys
-Source: <https://www.teamix.org/projects/distkeys>
+Source: https://github.com/teamix/distkeys
 
 Files: *
 Copyright: Copyright (C) 2006-2013 teamix GmbH
