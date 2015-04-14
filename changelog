@@ -1,0 +1,14 @@
+distkeys 1.1 (14.4.2015)
+- creating ~/.ssh if it does not exit:
+  - made sftp.stat actually wait for result, before continuing
+  - fixed long standing Ruby 1.9+ compatibility issue "can't add a new
+    key into hash during iteration during ssh.exec" by first completing
+    sftp call and then to the ssh exec calls
+- moving authorized_keys-new to authorized_keys:
+  - implemented as executing mv command again now that I know how to solve
+    "can't add a new key into hash during iteration during ssh.exec"
+  - this is safer then the previous rm and then sftp.rename approach
+
+distkeys 1.0 (10.10.2014)
+- initial version, released under GPL-2
+
