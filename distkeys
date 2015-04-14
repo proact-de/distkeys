@@ -168,8 +168,13 @@ class SSHAuthKeys
 		end
 		
 		# Try to create ~/.ssh if it does not already exist
+		# First complete the sftp part, then do the ssh.exec part, see:
+		# ruby-net-ssh: can't add a new key into hash during iteration during ssh.exec
+		# https://bugs.debian.org/637794
+		# ruby-net-ssh: can't add a new key into hash during iteration during ssh.exec #110
+		# https://github.com/net-ssh/net-ssh/issues/110
 		ok=false
-		@sftp.lstat( ".ssh" ) do |response| ok = response.ok?; end
+		@sftp.lstat!( ".ssh" ) do |response| ok = response.ok? end
 		if not ok then
 				puts "~/.ssh does not seem to exist, creating it with 700..."
 				@ssh.exec!( "mkdir ~/.ssh" )
@@ -205,40 +210,42 @@ class SSHAuthKeys
 			return
 		end
 
-		request = @sftp.lstat!(newauthkeyfile) do | response |
-			if response.ok?
-				# File size okay?
-				if response[:attrs].size >= wantedsize
-					puts "File does exist and has correct size, moving to #{@authkeyfile}..."
-					# Move the new keyfile over the old one
-					# OpenSSH does not yet allow overwriting with flag: 0x0001,
-					# or flag: 0x0002 using SFTP protocol version 5, it does support
-					# a vendor extension to protocol version 3 ("posix-rename@openssh.com")
-					# but this does not seem to be supported in ruby-net-ssh, see:
-					# does not seem to support sftp protocol version 5 rename flag for overwriting files.
-					# So accept a possibly dangerous race condition for now, by deleting
-					# first and then rename.
-					# https://bugzilla.mindrot.org/show_bug.cgi?id=2123
-					begin
-						@sftp.remove!( @authkeyfile )
-					rescue Net::SFTP::StatusException => exception
-						# Any other error than file does not exist?
-						if exception.code != 2
-							puts	exception.message
-							puts "ERROR: Can't remove #{ @authkeyfile }"
-						end
-					end
-					@sftp.rename!( newauthkeyfile, @authkeyfile, 0x0001 )
-
-					# We saved the changes, so no unsaved changes anymore
-					@changed = false
-				end
-			end
+		# First complete the sftp part, then do the ssh.exec part, see:
+		# ruby-net-ssh: can't add a new key into hash during iteration during ssh.exec
+		# https://bugs.debian.org/637794
+		# ruby-net-ssh: can't add a new key into hash during iteration during ssh.exec #110
+		# https://github.com/net-ssh/net-ssh/issues/110
+		ok = false
+		size = 0
+		@sftp.lstat!(newauthkeyfile) do | response |
+			ok = response.ok?
+			size = response[:attrs].size
 		end
-		#@sftp.loop
-	end
+		# the destination authorized_keys file may be larger due to other keys
+		# in there
+		if ok and size >= wantedsize then
+			puts "File does exist and has correct size, moving to #{@authkeyfile}..."
+			# Move the new keyfile over the old one
+			# OpenSSH does not yet allow overwriting with flag: 0x0001,
+			# or flag: 0x0002 using SFTP protocol version 5, it does support
+			# a vendor extension to protocol version 3 ("posix-rename@openssh.com")
+			# but this does not seem to be supported in ruby-net-ssh, see:
+			# does not seem to support sftp protocol version 5 rename flag for overwriting files.
+			# So accept a possibly dangerous race condition for now, by deleting
+			# first and then rename.
+			#
+			# So instead of
+			# @sftp.rename!( newauthkeyfile, @authkeyfile, 0x0001 )
+			# exec the mv command
+			# https://bugzilla.mindrot.org/show_bug.cgi?id=2123
+			@ssh.exec!( "mv \"#{newauthkeyfile}\" \"#{@authkeyfile}\"" )
 
-end
+			# We saved the changes, so no unsaved changes anymore
+			@changed = false
+		end
+	end # def commit
+
+end # class SSHAuthKeys
 
 class SSHGateway
 	# Net::SSH::Gateway instance
