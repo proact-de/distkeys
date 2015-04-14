@@ -180,7 +180,12 @@ class SSHAuthKeys
 		backupfile = "#{@authkeyfile}-#{ Time.now.strftime("%Y-%m-%d") }.bak"
 		# With -n only if we didn't do one today already
 		puts "Creating a backup to #{backupfile} if not already done today..."
-		@ssh.exec!( "test -f #{backupfile} || cp -p #{@authkeyfile} #{backupfile}" )
+		begin
+			@ssh.exec!( "test -f #{backupfile} || cp -p #{@authkeyfile} #{backupfile}" )
+		rescue Net::SSH::ChannelOpenFailed
+			puts	exception.message
+			puts "ERROR: Can't open SSH channel for creating a backup."
+		end
 
 		newauthkeyfile = "#{@authkeyfile}-new"
 		puts "Uploading keys to #{newauthkeyfile}..."
