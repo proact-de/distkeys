@@ -182,7 +182,7 @@ class SSHAuthKeys
 		puts "Creating a backup to #{backupfile} if not already done today..."
 		begin
 			@ssh.exec!( "test -f #{backupfile} || cp -p #{@authkeyfile} #{backupfile}" )
-		rescue Net::SSH::ChannelOpenFailed
+		rescue Net::SSH::ChannelOpenFailed => exception
 			puts	exception.message
 			puts "ERROR: Can't open SSH channel for creating a backup."
 		end
