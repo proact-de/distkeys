@@ -1,5 +1,4 @@
-Distkeys
-========
+# Distkeys
 Distkeys distributes a list of SSH public keys to a list of servers. It
 reaches servers behind a firewall as well.
 
@@ -26,8 +25,7 @@ Read more in our blog (in german):
 [Distkeys als Open Source](http://blog.teamix.de/2013/10/06/distkeys-als-open-source/)
 
 
-VCS
-===
+## VCS
 
 Distkeys is hosted at:
 
@@ -43,8 +41,7 @@ git-buildpackage. It has the following branches:
 * pristine-tar: This would be for release tarballs if any.
 
 
-SSH Configuration
------------------
+## SSH Configuration
 
 Using the `-F` command line option, you may specify an alternative
 per-user SSH configuration file which will be used instead of the default
@@ -66,8 +63,7 @@ See the `ssh_config(5)` manpage for details about available configuration
 options.
 
 
-Known Issues
-------------
+## Known Issues
 
 ### Uninitialized contant Net::SFTP::Session:StringIO in Net::STFP v2 < 2.0.5
 There is an error in Net::SFTP v2 prior to 2.0.5 which needs to be added
