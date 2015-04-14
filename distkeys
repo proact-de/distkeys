@@ -168,12 +168,12 @@ class SSHAuthKeys
 		end
 		
 		# Try to create ~/.ssh if it does not already exist
-		@sftp.lstat( ".ssh" ) do | response |
-			if not response.ok?
+		ok=false
+		@sftp.lstat( ".ssh" ) do |response| ok = response.ok?; end
+		if not ok then
 				puts "~/.ssh does not seem to exist, creating it with 700..."
 				@ssh.exec!( "mkdir ~/.ssh" )
 				@ssh.exec!( "chmod 700 ~/.ssh" )
-			end
 		end
 		
 		# Create a backup
