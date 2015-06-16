@@ -1,5 +1,9 @@
+distkeys 1.2 (16.6.2015)
+- now creating ~/.ssh if it does not exists actually works
+  - handling an exception was missing
+
 distkeys 1.1 (14.4.2015)
-- creating ~/.ssh if it does not exit:
+- creating ~/.ssh if it does not exist:
   - made sftp.stat actually wait for result, before continuing
   - fixed long standing Ruby 1.9+ compatibility issue "can't add a new
     key into hash during iteration during ssh.exec" by first completing
