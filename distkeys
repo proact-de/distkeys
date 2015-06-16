@@ -174,11 +174,14 @@ class SSHAuthKeys
 		# ruby-net-ssh: can't add a new key into hash during iteration during ssh.exec #110
 		# https://github.com/net-ssh/net-ssh/issues/110
 		ok=false
-		@sftp.lstat!( ".ssh" ) do |response| ok = response.ok? end
-		if not ok then
-				puts "~/.ssh does not seem to exist, creating it with 700..."
-				@ssh.exec!( "mkdir ~/.ssh" )
-				@ssh.exec!( "chmod 700 ~/.ssh" )
+		begin
+			@sftp.lstat!( ".ssh" ) do |response| ok = response.ok? end
+		rescue Net::SFTP::StatusException => exception
+			if not ok then
+					puts "~/.ssh does not seem to exist, creating it with 700..."
+					@ssh.exec!( "mkdir ~/.ssh" )
+					@ssh.exec!( "chmod 700 ~/.ssh" )
+			end
 		end
 		
 		# Create a backup
