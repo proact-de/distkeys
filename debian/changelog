@@ -1,5 +1,5 @@
-distkeys (1.2-1) UNRELEASED; urgency=low
+distkeys (1.3-1) UNRELEASED; urgency=low
 
   * Initial Release (Closes: #745478).
 
- -- Martin Steigerwald <ms@teamix.de>  Thu, 18 Jun 2015 09:59:16 +0200
+ -- Martin Steigerwald <ms@teamix.de>  Fri, 19 Jun 2015 14:03:39 +0200
