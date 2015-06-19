@@ -8,7 +8,7 @@ require 'optparse'
 
 require 'termios'
 
-APPVERSION = "1.2"
+APPVERSION = "1.3"
 
 class SSHAuthKeys
 	# Authorized Keys
@@ -77,9 +77,9 @@ class SSHAuthKeys
 				# strip tailing "\n" as @authkey_flat.split("\n") has no tailing "\n" either
 				line = line.chomp
 				# Is this a key?
-				if line.index("ssh-")
+				if line.index(/[a-z]+-/)
 					# Extract base64 from key
-					matchdata = line.match(/ssh-[^ ]+\s+([A-Za-z0-9=+\/]+) (.*$)/)
+					matchdata = line.match(/[a-z]+-[^ ]+\s+([A-Za-z0-9=+\/]+) (.*$)/)
 					# Bail out if it does not appear to be a valid authorized key
 					if not matchdata
 						puts "ERROR: The following does not seem to be a valid authorized key."
@@ -123,9 +123,9 @@ class SSHAuthKeys
 			# Remove keys in the file
 			key.each do | line |
 				# Is this a key?
-				if line.index("ssh-")
+				if line.index(/[a-z]+-/)
 					# Extract base64 from key
-					matchdata = line.match(/ssh-[^ ]+\s+([A-Za-z0-9=+\/]+) (.*$)/)
+					matchdata = line.match(/[a-z]+-[^ ]+\s+([A-Za-z0-9=+\/]+) (.*$)/)
 					if not matchdata
 						puts "ERROR: The following does not seem to be a valid authorized key."
 						puts line
