@@ -200,6 +200,11 @@ class SSHAuthKeys
 		puts "Uploading keys to #{newauthkeyfile}..."
 		wantedsize = 0
 		begin
+			# Does not seem to correctly set permissions on open
+			# https://stackoverflow.com/questions/7713850/unable-to-create-file-with-correct-permissions-using-netssh-library
+			filehandle = @sftp.open!(newauthkeyfile, 'w', :permissions => 0600)
+			@sftp.fsetstat!(filehandle, {:permissions => 0600})
+			# Does not take a permissions argument this way
 			@sftp.file.open(newauthkeyfile , "w" ) do | file |
 				@authkeys.each do | line |
 					file.puts line
@@ -212,6 +217,8 @@ class SSHAuthKeys
 			puts "ERROR: Can't open authorized_keys for writing! Skipped."
 			return
 		end
+		
+		
 
 		# First complete the sftp part, then do the ssh.exec part, see:
 		# ruby-net-ssh: can't add a new key into hash during iteration during ssh.exec
