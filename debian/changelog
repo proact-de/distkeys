@@ -1,4 +1,4 @@
-distkeys (1.4-1) UNRELEASED; urgency=low
+distkeys (1.4dev-1) UNRELEASED; urgency=low
 
   * Initial Release (Closes: #745478).
 
