@@ -8,7 +8,7 @@ require 'optparse'
 
 require 'termios'
 
-APPVERSION = "1.3.900"
+APPVERSION = "1.4dev"
 
 class SSHAuthKeys
 	# Authorized Keys
