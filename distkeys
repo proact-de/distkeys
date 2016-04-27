@@ -8,7 +8,7 @@ require 'optparse'
 
 require 'termios'
 
-APPVERSION = "1.3"
+APPVERSION = "1.4"
 
 class SSHAuthKeys
 	# Authorized Keys
@@ -287,7 +287,7 @@ class SSHGateway
 				puts "Connecting to gateway #{@host} (user: #{@user}, port: #{@port})..."
 				@gateway = Net::SSH::Gateway.new(@host, @user, :port => @port, :compression => false, :config => @ssh_config )
 			end
-		rescue Errno::ETIMEDOUT, Errno::EHOSTUNREACH, Errno::ENETUNREACH, Errno::ECONNREFUSED, Net::SSH::AuthenticationFailed, SocketError => exception
+		rescue Errno::ETIMEDOUT, Errno::EHOSTUNREACH, Errno::ENETUNREACH, Errno::ECONNREFUSED, Net::SSH::AuthenticationFailed, Ne    t::SSH::Disconnect, Net::SSH::HostKeyMismatch, Net::SSH::ConnectionTimeout, SocketError => exception
 			STDERR.puts "#{exception.class}: #{exception.message}"
 			if exception.class == Net::SSH::AuthenticationFailed
 				t = Termios.tcgetattr(STDIN)
@@ -336,12 +336,12 @@ class SSHHost
 				puts "Connecting to host #{@host} (user: #{@user}, port: #{@port})..."
 				@ssh = Net::SSH.start(@host, @user,  { :port => @port, :compression => false, :password => password, :config => @ssh_config } )
 			end
-		rescue Errno::ETIMEDOUT, Errno::EHOSTUNREACH, Errno::ENETUNREACH, Errno::ECONNREFUSED, Net::SSH::AuthenticationFailed, Net::SSH::Disconnect, Net::SSH::HostKeyMismatch, SocketError => exception
+		rescue Errno::ETIMEDOUT, Errno::EHOSTUNREACH, Errno::ENETUNREACH, Errno::ECONNREFUSED, Net::SSH::AuthenticationFailed, Net::SSH::Disconnect, Net::SSH::HostKeyMismatch, Net::SSH::ConnectionTimeout, SocketError => exception
 			STDERR.puts "#{exception.class}: #{exception.message}"
 			if exception.class == Net::SSH::AuthenticationFailed
 				t = Termios.tcgetattr(STDIN)
 				old = t
-				# Silence echoing of the password the user enters
+				# Silent echoing of the password the user enters
 				t.lflag &= ~Termios::ECHO
 				Termios.tcsetattr(STDIN, Termios::TCSANOW, t)
 				print "Password - (RETURN for skipping the host): "
