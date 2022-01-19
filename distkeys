@@ -205,8 +205,8 @@ class SSHAuthKeys
 			@sftp.fsetstat!(filehandle, {:permissions => 0600})
 			# Does not take a permissions argument this way
 			@sftp.file.open(newauthkeyfile , "w" ) do | file |
+				file.puts @authkeys
 				@authkeys.each do | line |
-					file.puts line
 					wantedsize += line.length + 1
 				end
 			end
