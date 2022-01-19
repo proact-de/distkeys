@@ -66,6 +66,15 @@ options.
 
 ## Known Issues
 
+### does not take UTF-8 more byte character length into account when writing data to a file
+
+Net:SFTP truncates writes with more byte UTF-8 characters.
+This happens with Net::SFTP 3.0.0.
+
+Do not use more byte characters in the description for an SSH key until this issue is fixed.
+
+[https://github.com/net-ssh/net-sftp/issues/133](does not take UTF-8 more byte character length into account when writing data to a file #133)
+
 ### Uninitialized contant Net::SFTP::Session:StringIO in Net::STFP v2 < 2.0.5
 
 There is an error in Net::SFTP v2 prior to 2.0.5 which needs to be added
