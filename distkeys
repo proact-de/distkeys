@@ -36,7 +36,7 @@ class SSHAuthKeys
 		puts "Opening SFTP session..."
 		@sftp = Net::SFTP::Session.new(@ssh)
 		@sftp.loop { @sftp.opening? }
-		
+
 		begin
 			@authkeys_flat = @sftp.download!( authkeyfile, nil, :via => :scp )
 
@@ -83,7 +83,6 @@ class SSHAuthKeys
 					# Bail out if it does not appear to be a valid authorized key
 					if not matchdata
 						puts "ERROR: The following does not seem to be a valid authorized key."
-						puts line
 						puts "Aborting parsing this keyfile list..."
 						return false
 					end
@@ -115,11 +114,11 @@ class SSHAuthKeys
 		end
 	end
 	# }}}
-	
+
 	def removekeyfile( keyfile, verbose = false )
 		if File.exists?( keyfile )
 			key = File.new( keyfile, "r" ).to_a
-			
+
 			# Remove keys in the file
 			key.each do | line |
 				# Is this a key?
@@ -158,7 +157,7 @@ class SSHAuthKeys
 			puts "ERROR: Keyfile #{keyfile} does not exist. Skipped."
 		end
 	end
-	
+
 	# Commits changes to authorized keys to the server
 	# Creates a backup
 	def commit()
@@ -166,7 +165,7 @@ class SSHAuthKeys
 			puts "Nothing has changed. Skipping uploading to server."
 			return true
 		end
-		
+
 		# Try to create ~/.ssh if it does not already exist
 		# First complete the sftp part, then do the ssh.exec part, see:
 		# ruby-net-ssh: can't add a new key into hash during iteration during ssh.exec
@@ -183,7 +182,7 @@ class SSHAuthKeys
 					@ssh.exec!( "chmod 700 ~/.ssh" )
 			end
 		end
-		
+
 		# Create a backup
 		backupfile = "#{@authkeyfile}-#{ Time.now.strftime("%Y-%m-%d") }.bak"
 		# With -n only if we didn't do one today already
@@ -207,8 +206,9 @@ class SSHAuthKeys
 			# Does not take a permissions argument this way
 			@sftp.file.open(newauthkeyfile , "w" ) do | file |
 				@authkeys.each do | line |
+					puts line
 					file.puts line
-					wantedsize += line.length
+					wantedsize += line.length + 1
 				end
 			end
 			@sftp.loop
@@ -217,8 +217,6 @@ class SSHAuthKeys
 			puts "ERROR: Can't open authorized_keys for writing! Skipped."
 			return
 		end
-		
-		
 
 		# First complete the sftp part, then do the ssh.exec part, see:
 		# ruby-net-ssh: can't add a new key into hash during iteration during ssh.exec
@@ -231,9 +229,10 @@ class SSHAuthKeys
 			ok = response.ok?
 			size = response[:attrs].size
 		end
+
 		# the destination authorized_keys file may be larger due to other keys
 		# in there
-		if ok and size >= wantedsize then
+		if ok and size == wantedsize then
 			puts "File does exist and has correct size, moving to #{@authkeyfile}..."
 			# Move the new keyfile over the old one
 			# OpenSSH does not yet allow overwriting with flag: 0x0001,
@@ -252,6 +251,8 @@ class SSHAuthKeys
 
 			# We saved the changes, so no unsaved changes anymore
 			@changed = false
+		else
+			puts "ERROR: New file does not have the right size! Not replacing old file."
 		end
 	end # def commit
 
@@ -260,10 +261,10 @@ end # class SSHAuthKeys
 class SSHGateway
 	# Net::SSH::Gateway instance
 	attr_reader :gateway
-	
+
 	# Gateway host data
 	attr_reader :host, :port, :user
-	
+
 	# Takes a hash with host, port, user as returned from connection_info
 	def initialize( ssh_config, hostdata, betweengateway = nil )
 		@ssh_config = ssh_config
@@ -301,7 +302,7 @@ class SSHGateway
 			end
 			return false
 		end
-		
+
 		return @gateway
 	end
 
@@ -314,7 +315,7 @@ end
 class SSHHost
 	# Net::SSH instance of the SSH server if connectedssh_gateway
 	attr_reader :ssh
-	
+
 	# Takes a hash with host, port, user as returned from connection_info
 	def initialize( ssh_config, hostdata, gateway = nil )
 		@ssh_config = ssh_config
@@ -322,7 +323,7 @@ class SSHHost
 		@host = hostdata[:host]
 		@port = hostdata[:port]
 		@user = hostdata[:user]
-		
+
 		@gateway = gateway
 	end
 
@@ -422,7 +423,7 @@ def read_hostlist_entry( list, index )
 		if clean_line.length > 0
 			# a "gateway" statement?
 				if matchdata = clean_line.match( /^gateway (\S+)/ )
-					gateway = matchdata[1] 
+					gateway = matchdata[1]
 					gwhosts << { gateway => [ ] }
 
 					# recursively call us self
@@ -474,7 +475,7 @@ class GWHosts
 		@cmd = args['cmd']
 		@script = args['script']
 	end
-	
+
 	def handle_gateway( gateway, betweengateway = nil )
 		gateway_data = connection_info( gateway )
 
@@ -496,18 +497,18 @@ class GWHosts
 
 	# Different output markers for start_ssh_session
 	START_SSH_SESSION_MARKER_CMD_OUTPUT = [
-		"\n<<<<< START OF COMMAND OUTPUT", 
+		"\n<<<<< START OF COMMAND OUTPUT",
 		">>>>> END OF COMMAND OUTPUT\n\n"
 	]
 	START_SSH_SESSION_MARKER_SCRIPT_OUTPUT = [
-		"\n<<<<< START OF SCRIPT OUTPUT", 
+		"\n<<<<< START OF SCRIPT OUTPUT",
 		">>>>> END OF SCRIPT OUTPUT\n\n"
 	]
 	START_SSH_SESSION_MARKER_SESSION = [
-		"\n<<<<< START OF SESSION", 
+		"\n<<<<< START OF SESSION",
 		">>>>> END OF SESSION\n\n"
 	]
-	
+
 	# {{{ start interactive ssh session
 	def start_ssh_session( host_data, gateway, cmd = nil, marker = nil)
 		ssh_config_opt = case @ssh_config
@@ -539,7 +540,7 @@ class GWHosts
 			end
 		end
 	end
-	
+
 	# {{{ handle a single host }}}
 	def handle_host( host, gateway = nil )
 		if gateway
@@ -547,7 +548,7 @@ class GWHosts
 		else
 			puts "\nHost: #{host}"
 		end
-		
+
 		# {{{ interactive mode
 		if @interactive == true then
 			skip = false
@@ -597,7 +598,7 @@ class GWHosts
 		when "hostname"
 			puts ssh.exec!("hostname")
 		when "hostkeys"
-			puts ssh.exec!("ls /etc/ssh/*key | xargs -n1 ssh-keygen -lf") 
+			puts ssh.exec!("ls /etc/ssh/*key | xargs -n1 ssh-keygen -lf")
 		when "add"
 			authkeys = SSHAuthKeys.new( ssh )
 			@keys.each do | key |
@@ -621,7 +622,7 @@ class GWHosts
 					raise OptionParser::ParseError, "ERROR: +/- in keylist is only valid for addremove action."
 				end
 			end
-			@keys.each do | key | 
+			@keys.each do | key |
 				authkeys.removekeyfile( key, @verbose )
 			end
 			# Commit the changes
@@ -704,7 +705,7 @@ class GWHosts
 			if gwhost.class == Hash
 				gwhost.each do| gateway, hostlist |
 					puts "Gateway: #{gateway}, Level #{level + 1}"
-					
+
 					if usegateway = handle_gateway( gateway, usegateway )
 						# Call ourselves recursively for handling nested gateways
 						handle_gwhost( hostlist, level + 1, leave, usegateway)
@@ -729,7 +730,7 @@ class GWHosts
 		end
 	end
 	# }}}
-	
+
 	# Do the magic
 	def loop()
 		handle_gwhost( @gwhosts )
@@ -793,11 +794,11 @@ ssh:             Start interactive SSH session.\n\n"
 	opt.on( "-G", "--gateway <gateway>", "Gateway to access the host via port forwarding." ) do | value |
 		gateway = value.to_s
 	end
-	
+
 	opt.on( "-i", "--interactive", "Ask before each operation on a host." ) do
 		interactive = true
 	end
-	
+
 	opt.on("-v", "--verbose", "Also show keys that have not been changed.") do
 		verbose = true
 	end
@@ -813,7 +814,7 @@ begin
 	if gwhostlist and (host or gateway)
 		raise OptionParser::ParseError, ( "Ambiguous options: do not specify -g/-h and -G/-H." )
 	end
-	
+
 	# Transform gateway and host in our data structure for the loop
 	if host and gateway
 		gwhostlist = [ {
@@ -824,9 +825,9 @@ begin
 	end
 
 	action = ARGV[0] || raise( OptionParser::ParseError, "Need an action in order to do something." )
-	
+
 	raise OptionParser::ParseError, ( "Unsupported action." ) if not ( action == "add" or action == "remove" or action == "addremove" or action == "list" or action == "ssh" or action == "cmd" or action == "script" or action == "scp" or action == "hostname" or action == "hostkeys")
-	
+
 	raise OptionParser::ParseError, ( "Need a keyfile." ) if keys == nil and not ( action == "list" )
 
 	if action == "cmd"
