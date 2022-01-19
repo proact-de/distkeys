@@ -206,7 +206,6 @@ class SSHAuthKeys
 			# Does not take a permissions argument this way
 			@sftp.file.open(newauthkeyfile , "w" ) do | file |
 				@authkeys.each do | line |
-					puts line
 					file.puts line
 					wantedsize += line.length + 1
 				end
