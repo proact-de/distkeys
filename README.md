@@ -77,7 +77,7 @@ Do not use more byte characters in the description for an SSH key until this iss
 
 ### Uninitialized contant Net::SFTP::Session:StringIO in Net::STFP v2 < 2.0.5
 
-There is an error in Net::SFTP v2 prior to 2.0.5 which needs to be added
+There is a missing dependency in Net::SFTP v2 prior to 2.0.5 which needs to be added
 manually:
 
 If you get:
