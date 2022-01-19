@@ -1,4 +1,5 @@
 # Distkeys
+
 Distkeys distributes a list of SSH public keys to a list of servers. It
 reaches servers behind a firewall as well.
 
@@ -66,12 +67,13 @@ options.
 ## Known Issues
 
 ### Uninitialized contant Net::SFTP::Session:StringIO in Net::STFP v2 < 2.0.5
+
 There is an error in Net::SFTP v2 prior to 2.0.5 which needs to be added
 manually:
 
 If you get:
 
-	/usr/[...]/lib/net/sftp/session.rb:123:in `download!': uninitialized constant Net::SFTP::Session::StringIO (NameError) 
+	/usr/[...]/lib/net/sftp/session.rb:123:in `download!': uninitialized constant Net::SFTP::Session::StringIO (NameError)
 
 add
 
